@@ -11,9 +11,10 @@
 #include "opengl.h"
 #include "render.hpp"
 
-#include "model/brick.h"
+#include "model/block.h"
 #include "model/paddle.h"
 #include "model/ball.h"
+#include "model/cube.h"
 
 int vp_width = 2400;
 int vp_height = 1200;
@@ -76,11 +77,14 @@ int main()
   */
 
   struct mesh paddle_mesh;
-  struct mesh brick_mesh;
+  struct mesh block_mesh;
   struct mesh ball_mesh;
-  brick_mesh.vtx = make_buffer(GL_ARRAY_BUFFER, brick_vertices, (sizeof (brick_vertices)));
-  brick_mesh.idx = make_buffer(GL_ELEMENT_ARRAY_BUFFER, brick_Cube_triangles, (sizeof (brick_Cube_triangles)));
-  brick_mesh.length = brick_Cube_triangles_length;
+  block_mesh.vtx = make_buffer(GL_ARRAY_BUFFER, block_vertices, (sizeof (block_vertices)));
+  block_mesh.idx = make_buffer(GL_ELEMENT_ARRAY_BUFFER, block_Cube_triangles, (sizeof (block_Cube_triangles)));
+  block_mesh.length = block_Cube_triangles_length;
+  //block_mesh.vtx = make_buffer(GL_ARRAY_BUFFER, cube_vertices, (sizeof (cube_vertices)));
+  //block_mesh.idx = make_buffer(GL_ELEMENT_ARRAY_BUFFER, cube_Cube_triangles, (sizeof (cube_Cube_triangles)));
+  //block_mesh.length = cube_Cube_triangles_length;
 
   paddle_mesh.vtx = make_buffer(GL_ARRAY_BUFFER, paddle_vertices, (sizeof (paddle_vertices)));
   paddle_mesh.idx = make_buffer(GL_ELEMENT_ARRAY_BUFFER, paddle_Cylinder_triangles, (sizeof (paddle_Cylinder_triangles)));
@@ -96,6 +100,7 @@ int main()
                                 src_shader_vertex_color_fp_glsl_size);
   glUseProgram(program);
   uint attrib_position = glGetAttribLocation(program, "position");
+  uint attrib_texture = glGetAttribLocation(program, "_texture");
   uint attrib_normal = glGetAttribLocation(program, "normal");
   uint uniform_trans = glGetUniformLocation(program, "trans");
   uint uniform_normal_trans = glGetUniformLocation(program, "normal_trans");
@@ -144,16 +149,18 @@ int main()
       }
     }
 
+    float extent = 0.25;
     paddle_x += paddle_dx * 0.4;
-    if (paddle_x < 0.5)
-      paddle_x = 0.5;
-    if (paddle_x > 11.5)
-      paddle_x = 11.5;
+    if (paddle_x < extent)
+      paddle_x = extent;
+    if (paddle_x > 12 - extent)
+      paddle_x = 12 - extent;
 
     render(paddle_mesh,
-           brick_mesh,
+           block_mesh,
            ball_mesh,
            attrib_position,
+           attrib_texture,
            attrib_normal,
            uniform_trans,
            uniform_normal_trans,

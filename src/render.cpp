@@ -57,14 +57,25 @@ mat4x4 perspective(float low1, float high1,
   return m3;
 }
 
+static inline float px(float x)
+{
+  return (x / 12.0) * 2.0 - 1.0 + 1.0f / 12.0f;
+}
+
+static inline float py(float y)
+{
+  return (y / 27.0) * -2.0 + 1.0 - 1.0f / 27.0f;
+}
+
 /*
   levels are 13x28
  */
 
 void render(mesh paddle_mesh,
-            mesh brick_mesh,
+            mesh block_mesh,
             mesh ball_mesh,
             uint attrib_position,
+            uint attrib_texture,
             uint attrib_normal,
             uint uniform_trans,
             uint uniform_normal_trans,
@@ -81,11 +92,11 @@ void render(mesh paddle_mesh,
   theta += 0.01;
 
   //////////////////////////////////////////////////////////////////////
-  // render bricks
+  // render blocks
   //////////////////////////////////////////////////////////////////////
 
-  glBindBuffer(GL_ARRAY_BUFFER, brick_mesh.vtx);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, brick_mesh.idx);
+  glBindBuffer(GL_ARRAY_BUFFER, block_mesh.vtx);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, block_mesh.idx);
 
   glVertexAttribPointer(attrib_position,
                         3,
@@ -94,15 +105,13 @@ void render(mesh paddle_mesh,
                         (sizeof (float)) * 8,
                         (void*)(0 * 4)
                         );
-  /*
-    glVertexAttribPointer(vertex_color_attrib_texture,
-    2,
-    GL_FLOAT,
-    GL_FALSE,
-    (sizeof (float)) * 8,
-    (void*)(3 * 4)
-    );
-  */
+  glVertexAttribPointer(attrib_texture,
+                        2,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        (sizeof (float)) * 8,
+                        (void*)(3 * 4)
+                        );
   glVertexAttribPointer(attrib_normal,
                         3,
                         GL_FLOAT,
@@ -111,6 +120,7 @@ void render(mesh paddle_mesh,
                         (void*)(5 * 4)
                         );
   glEnableVertexAttribArray(attrib_position);
+  glEnableVertexAttribArray(attrib_texture);
   glEnableVertexAttribArray(attrib_normal);
 
   assert(src_level_level1_data_size == 13 * 28);
@@ -136,10 +146,7 @@ void render(mesh paddle_mesh,
                             1.0f / 27.0f,
                             1.0f / 27.0f));
 
-      float px = ((float)x / 13.0) * 2.0 - 1.0 + 1.0f / 13.0f;
-      float py = ((float)y / 28.0) * -2.0 + 1.0 - 1.0f / 28.0f;
-
-      mat4x4 t = translate(vec3(px, py, 0.0));
+      mat4x4 t = translate(vec3(px(x), py(y), 0.0));
 
       mat4x4 trans = a * t * rx * s;
 
@@ -151,7 +158,7 @@ void render(mesh paddle_mesh,
       glUniform3fv(uniform_base_color, 1, &base_color[0]);
       glUniform3fv(uniform_light_pos, 1, &light_pos[0]);
 
-      glDrawElements(GL_TRIANGLES, brick_mesh.length, GL_UNSIGNED_INT, 0);
+      glDrawElements(GL_TRIANGLES, block_mesh.length, GL_UNSIGNED_INT, 0);
     }
   }
 
@@ -162,12 +169,14 @@ void render(mesh paddle_mesh,
 
   {
     mat4x4 rx = rotate_y(PI / 2.0f);
+    mat4x4 s = scale(1.0f / 12.0f);
+    /*
     mat4x4 s = scale(vec3(1.0f,
                           1.3f,
                           1.5f));
-    float px = ((float)paddle_x / 13.0) * 2.0 - 1.0 + 1.0f / 13.0f;
-    float py = ((float)26 / 28.0) * -2.0 + 1.0 - 1.0f / 28.0f;
-    mat4x4 t = translate(vec3(px, py, 0.0));
+    */
+
+    mat4x4 t = translate(vec3(px(paddle_x), py(26), 0.0));
 
     mat4x4 trans = a * t * rx * s;
     mat3x3 normal_trans = submatrix(rx, 3, 3);
@@ -185,15 +194,13 @@ void render(mesh paddle_mesh,
                           (sizeof (float)) * 8,
                           (void*)(0 * 4)
                           );
-    /*
-      glVertexAttribPointer(vertex_color_attrib_texture,
-      2,
-      GL_FLOAT,
-      GL_FALSE,
-      (sizeof (float)) * 8,
-      (void*)(3 * 4)
-      );
-    */
+    glVertexAttribPointer(attrib_texture,
+                          2,
+                          GL_FLOAT,
+                          GL_FALSE,
+                          (sizeof (float)) * 8,
+                          (void*)(3 * 4)
+                          );
     glVertexAttribPointer(attrib_normal,
                           3,
                           GL_FLOAT,
@@ -202,6 +209,7 @@ void render(mesh paddle_mesh,
                           (void*)(5 * 4)
                           );
     glEnableVertexAttribArray(attrib_position);
+    glEnableVertexAttribArray(attrib_texture);
     glEnableVertexAttribArray(attrib_normal);
 
     glUniform4fv(uniform_trans, 4, &trans[0][0]);
@@ -218,10 +226,8 @@ void render(mesh paddle_mesh,
 
   {
     mat4x4 rx = rotate_y(PI / 2.0f);
-    mat4x4 s = scale(0.03f);
-    float px = ((float)paddle_x / 13.0) * 2.0 - 1.0 + 1.0f / 13.0f;
-    float py = ((float)25 / 28.0) * -2.0 + 1.0 - 1.0f / 28.0f;
-    mat4x4 t = translate(vec3(px, py, 0.0));
+    mat4x4 s = scale(1.0f / 27.0f);
+    mat4x4 t = translate(vec3(px(paddle_x), py(25), 0.0));
 
     mat4x4 trans = a * t * rx * s;
     mat3x3 normal_trans = submatrix(rx, 3, 3);
@@ -239,15 +245,13 @@ void render(mesh paddle_mesh,
                           (sizeof (float)) * 8,
                           (void*)(0 * 4)
                           );
-    /*
-      glVertexAttribPointer(vertex_color_attrib_texture,
-      2,
-      GL_FLOAT,
-      GL_FALSE,
-      (sizeof (float)) * 8,
-      (void*)(3 * 4)
-      );
-    */
+    glVertexAttribPointer(attrib_texture,
+                          2,
+                          GL_FLOAT,
+                          GL_FALSE,
+                          (sizeof (float)) * 8,
+                          (void*)(3 * 4)
+                          );
     glVertexAttribPointer(attrib_normal,
                           3,
                           GL_FLOAT,
@@ -256,6 +260,7 @@ void render(mesh paddle_mesh,
                           (void*)(5 * 4)
                           );
     glEnableVertexAttribArray(attrib_position);
+    glEnableVertexAttribArray(attrib_texture);
     glEnableVertexAttribArray(attrib_normal);
 
     glUniform4fv(uniform_trans, 4, &trans[0][0]);

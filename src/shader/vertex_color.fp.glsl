@@ -5,6 +5,7 @@ uniform vec3 light_pos;
 
 varying vec3 fp_position;
 varying vec3 fp_normal;
+varying vec2 fp_texture;
 
 void main()
 {
@@ -18,6 +19,7 @@ void main()
 
   gl_FragColor = vec4(color, 1.0);
   //gl_FragColor = vec4(fp_normal * 0.5 + 0.5, 1.0);
+  //gl_FragColor = vec4(fp_texture, 0.0, 1.0);
 }
 // normal
 // x (0.0 left 1.0 right)

@@ -16,6 +16,7 @@ extern "C" {
               struct mesh brick_mesh,
               struct mesh ball_mesh,
               uint attrib_position,
+              uint attrib_texture,
               uint attrib_normal,
               uint uniform_trans,
               uint uniform_normal_trans,

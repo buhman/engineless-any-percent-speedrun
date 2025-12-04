@@ -1,12 +1,14 @@
 #version 120
 
 attribute vec3 position;
+attribute vec2 _texture;
 attribute vec3 normal;
 
 uniform vec4 trans[4];
 uniform vec3 normal_trans[3];
 
 varying vec3 fp_normal;
+varying vec2 fp_texture;
 varying vec3 fp_position;
 
 vec4 transform4(vec4 v)
@@ -30,6 +32,7 @@ void main()
 
   fp_normal = normalize(transform3(normal));
   fp_position = pos.xyz;
+  fp_texture = _texture;
 
   gl_Position = pos;
 }
