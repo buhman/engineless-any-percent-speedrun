@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <unistd.h>
 
 #include "glad/glad.h"
 
@@ -84,6 +85,10 @@ int main()
          1,
          stdout);
 
+  const double frame_rate = 60.0;
+  const double first_frame = glfwGetTime();
+  double last_frame = first_frame;
+  double frames = 0;
   while(!glfwWindowShouldClose(window)) {
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
       glfwSetWindowShouldClose(window, true);
@@ -106,10 +111,20 @@ int main()
     glEnableVertexAttribArray(vertex_color_attrib_position);
     glEnableVertexAttribArray(vertex_color_attrib_color);
 
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
+
+    double next_frame = last_frame + 1.0 / frame_rate;
+    while (next_frame - glfwGetTime() > 0) {
+      double delta = next_frame - glfwGetTime();
+      glfwWaitEventsTimeout(delta);
+    }
+    //printf("fps %f\n", frames / (glfwGetTime() - first_frame));
+
+    frames += 1;
   }
 
   glfwTerminate();
