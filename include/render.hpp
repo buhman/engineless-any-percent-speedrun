@@ -6,14 +6,22 @@ extern "C" {
 
   typedef unsigned int uint;
 
-void render(uint vtx, uint idx,
-            uint attrib_position,
-            uint attrib_normal,
-            uint uniform_trans,
-            uint uniform_normal_trans,
-            uint uniform_base_color,
-            uint uniform_light_pos,
-            int length);
+  struct mesh {
+    uint vtx;
+    uint idx;
+    uint length;
+  };
+
+  void render(struct mesh paddle_mesh,
+              struct mesh brick_mesh,
+              uint attrib_position,
+              uint attrib_normal,
+              uint uniform_trans,
+              uint uniform_normal_trans,
+              uint uniform_base_color,
+              uint uniform_light_pos,
+              float paddle_x);
+
 #ifdef __cplusplus
 }
 #endif

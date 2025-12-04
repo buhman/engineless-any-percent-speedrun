@@ -58,21 +58,27 @@ mat4x4 perspective(float low1, float high1,
   levels are 13x28
  */
 
-void render(uint vtx, uint idx,
+void render(mesh paddle_mesh,
+            mesh brick_mesh,
             uint attrib_position,
             uint attrib_normal,
             uint uniform_trans,
             uint uniform_normal_trans,
             uint uniform_base_color,
             uint uniform_light_pos,
-            int length)
+            float paddle_x)
 {
   static float theta = 0;
 
   theta += 0.01;
 
-  glBindBuffer(GL_ARRAY_BUFFER, vtx);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, idx);
+  //////////////////////////////////////////////////////////////////////
+  // render bricks
+  //////////////////////////////////////////////////////////////////////
+
+  glBindBuffer(GL_ARRAY_BUFFER, brick_mesh.vtx);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, brick_mesh.idx);
+
   glVertexAttribPointer(attrib_position,
                         3,
                         GL_FLOAT,
@@ -103,6 +109,8 @@ void render(uint vtx, uint idx,
   const uint8_t * level = (const uint8_t *)src_level_level1_data_start;
   const uint8_t * pal = (const uint8_t *)src_level_level1_data_pal_start;
 
+  vec3 light_pos = normalize(rotate_z(theta) * vec3(1, 1, 1));
+
   for (int y = 0; y < 28; y++) {
     for (int x = 0; x < 13; x++) {
       char tile = level[y * 13 + x];
@@ -130,15 +138,69 @@ void render(uint vtx, uint idx,
       //mat3x3 normal_trans = transpose(inverse(submatrix(trans, 0, 0)));
       mat3x3 normal_trans = submatrix(rx, 3, 3);
 
-      vec3 light_pos = normalize(rotate_z(theta) * vec3(1, 1, 1));
-
       glUniform4fv(uniform_trans, 4, &trans[0][0]);
       glUniform3fv(uniform_normal_trans, 3, &normal_trans[0][0]);
       glUniform3fv(uniform_base_color, 1, &base_color[0]);
       glUniform3fv(uniform_light_pos, 1, &light_pos[0]);
 
-      //glDrawArrays(GL_TRIANGLES, 0, 3);
-      glDrawElements(GL_TRIANGLES, length, GL_UNSIGNED_INT, 0);
+      glDrawElements(GL_TRIANGLES, brick_mesh.length, GL_UNSIGNED_INT, 0);
     }
+  }
+
+
+  //////////////////////////////////////////////////////////////////////
+  // render paddle
+  //////////////////////////////////////////////////////////////////////
+
+  {
+    mat4x4 rx = rotate_y(PI / 2.0f);
+    mat4x4 s = scale(vec3(1.0f,
+                          1.3f,
+                          1.5f));
+    float px = ((float)paddle_x / 13.0) * 2.0 - 1.0 + 1.0f / 13.0f;
+    float py = ((float)26 / 28.0) * -2.0 + 1.0 - 1.0f / 28.0f;
+    mat4x4 t = translate(vec3(px, py, 0.0));
+
+    mat4x4 trans = t * rx * s;
+    mat3x3 normal_trans = submatrix(rx, 3, 3);
+    //vec3 base_color = vec3(1, 1, 1);
+    vec3 base_color = vec3(1, 1, 1) * 0.5f;
+    //vec3 light_pos = vec3(-1, -1, 1);
+
+    glBindBuffer(GL_ARRAY_BUFFER, paddle_mesh.vtx);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, paddle_mesh.idx);
+
+    glVertexAttribPointer(attrib_position,
+                          3,
+                          GL_FLOAT,
+                          GL_FALSE,
+                          (sizeof (float)) * 8,
+                          (void*)(0 * 4)
+                          );
+    /*
+      glVertexAttribPointer(vertex_color_attrib_texture,
+      2,
+      GL_FLOAT,
+      GL_FALSE,
+      (sizeof (float)) * 8,
+      (void*)(3 * 4)
+      );
+    */
+    glVertexAttribPointer(attrib_normal,
+                          3,
+                          GL_FLOAT,
+                          GL_FALSE,
+                          (sizeof (float)) * 8,
+                          (void*)(5 * 4)
+                          );
+    glEnableVertexAttribArray(attrib_position);
+    glEnableVertexAttribArray(attrib_normal);
+
+    glUniform4fv(uniform_trans, 4, &trans[0][0]);
+    glUniform3fv(uniform_normal_trans, 3, &normal_trans[0][0]);
+    glUniform3fv(uniform_base_color, 1, &base_color[0]);
+    glUniform3fv(uniform_light_pos, 1, &light_pos[0]);
+
+    glDrawElements(GL_TRIANGLES, paddle_mesh.length, GL_UNSIGNED_INT, 0);
   }
 }

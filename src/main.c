@@ -12,6 +12,7 @@
 #include "render.hpp"
 
 #include "model/brick.h"
+#include "model/paddle.h"
 
 static int vp_width = 1200;
 static int vp_height = 1200;
@@ -23,12 +24,14 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
   vp_height = height;
 }
 
+/*
 static const float triangle_vertex_buffer_data[] = {
   // position          // color
    0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,  // bottom right
   -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,  // bottom left
    0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f   // top
 };
+*/
 
 int main()
 {
@@ -71,8 +74,15 @@ int main()
                                             (sizeof (triangle_vertex_buffer_data)));
   */
 
-  uint vtx = make_buffer(GL_ARRAY_BUFFER, brick_vertices, (sizeof (brick_vertices)));
-  uint idx = make_buffer(GL_ELEMENT_ARRAY_BUFFER, brick_Cube_triangles, (sizeof (brick_Cube_triangles)));
+  struct mesh paddle_mesh;
+  struct mesh brick_mesh;
+  brick_mesh.vtx = make_buffer(GL_ARRAY_BUFFER, brick_vertices, (sizeof (brick_vertices)));
+  brick_mesh.idx = make_buffer(GL_ELEMENT_ARRAY_BUFFER, brick_Cube_triangles, (sizeof (brick_Cube_triangles)));
+  brick_mesh.length = brick_Cube_triangles_length;
+
+  paddle_mesh.vtx = make_buffer(GL_ARRAY_BUFFER, paddle_vertices, (sizeof (paddle_vertices)));
+  paddle_mesh.idx = make_buffer(GL_ELEMENT_ARRAY_BUFFER, paddle_Cylinder_triangles, (sizeof (paddle_Cylinder_triangles)));
+  paddle_mesh.length = paddle_Cylinder_triangles_length;
 
   uint program = compile_shader(src_shader_vertex_color_vp_glsl_start,
                                 src_shader_vertex_color_vp_glsl_size,
@@ -94,6 +104,10 @@ int main()
   const double first_frame = glfwGetTime();
   double last_frame = first_frame;
   double frames = 0;
+  const char * last_gamepad_name = NULL;
+
+  float paddle_x = 0.0;
+
   while(!glfwWindowShouldClose(window)) {
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
       glfwSetWindowShouldClose(window, true);
@@ -104,14 +118,41 @@ int main()
     glClearColor(0.1, 0.2, 0.3, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    render(vtx, idx,
+    float paddle_dx = 0.0;
+    for (int i = 0; i < 16; i++) {
+      int present = glfwJoystickPresent(GLFW_JOYSTICK_1 + i);
+      int is_gamepad = glfwJoystickIsGamepad(GLFW_JOYSTICK_1 + i);
+      int count;
+      const float * axes = glfwGetJoystickAxes(GLFW_JOYSTICK_1 + i, &count);
+      //printf("present, %d %d %s %d\n", i, count, name, is_gamepad);
+      if (present && is_gamepad && count == 6) {
+        const char * name = glfwGetJoystickName(GLFW_JOYSTICK_1 + i);
+        if (name != last_gamepad_name) {
+          printf("active gamepad: `%s`; axes: %d\n", name, count);
+          last_gamepad_name = name;
+        }
+        float left = axes[2] * 0.5 + 0.5;
+        float right = axes[5] * 0.5 + 0.5;
+        paddle_dx = right - left;
+        break;
+      }
+    }
+
+    paddle_x += paddle_dx * 0.4;
+    if (paddle_x < 0.5)
+      paddle_x = 0.5;
+    if (paddle_x > 11.5)
+      paddle_x = 11.5;
+
+    render(paddle_mesh,
+           brick_mesh,
            attrib_position,
            attrib_normal,
            uniform_trans,
            uniform_normal_trans,
            uniform_base_color,
            uniform_light_pos,
-           brick_Cube_triangles_length);
+           paddle_x);
 
     glfwSwapBuffers(window);
     glfwPollEvents();

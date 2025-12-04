@@ -1,3 +1,4 @@
 *.o
 *.d
+*.blend1
 main

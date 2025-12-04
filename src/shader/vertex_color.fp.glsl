@@ -17,6 +17,7 @@ void main()
   vec3 color = (diffuse + 0.5) * base_color;
 
   gl_FragColor = vec4(color, 1.0);
+  //gl_FragColor = vec4(fp_normal * 0.5 + 0.5, 1.0);
 }
 // normal
 // x (0.0 left 1.0 right)
