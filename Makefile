@@ -14,12 +14,7 @@ CFLAGS += -Wall -Werror -Wfatal-errors
 CFLAGS += -Wno-error=unused-function
 CFLAGS += -Wno-error=unused-const-variable
 CFLAGS += -I$(MAKEFILE_PATH)/include
-#CFLAGS += $(shell pkg-config --cflags glfw3)
-#CFLAGS += $(shell pkg-config --cflags freetype2)
 LDFLAGS += -lm
-#LDFLAGS += $(shell pkg-config --libs glfw3)
-LDFLAGS += -z noexecstack
-#LDFLAGS += $(shell pkg-config --libs freetype2)
 
 ifndef GLFW
 $(error GLFW undefined)
@@ -27,8 +22,9 @@ endif
 
 ifeq ($(shell uname),Linux)
 OBJARCH = -O elf64-x86-64
+LDFLAGS += -z noexecstack
 else
-OBJARCH = -O pe-x86-64
+OBJARCH = -O pe-x86-64 -B i386:x86-64
 endif
 
 DEPFLAGS = -MMD -MP
