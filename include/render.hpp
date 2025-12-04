@@ -14,6 +14,7 @@ extern "C" {
 
   void render(struct mesh paddle_mesh,
               struct mesh brick_mesh,
+              struct mesh ball_mesh,
               uint attrib_position,
               uint attrib_normal,
               uint uniform_trans,

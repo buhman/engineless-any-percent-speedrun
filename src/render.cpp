@@ -13,6 +13,9 @@
 
 #define PI 3.14159274101257324219f
 
+extern int vp_width;
+extern int vp_height;
+
 mat4x4 perspective(float low1, float high1,
                    float low2, float high2)
 {
@@ -60,6 +63,7 @@ mat4x4 perspective(float low1, float high1,
 
 void render(mesh paddle_mesh,
             mesh brick_mesh,
+            mesh ball_mesh,
             uint attrib_position,
             uint attrib_normal,
             uint uniform_trans,
@@ -69,6 +73,10 @@ void render(mesh paddle_mesh,
             float paddle_x)
 {
   static float theta = 0;
+
+  float aspect = (float)vp_height / (float)vp_width;
+
+  mat4x4 a = scale(vec3(aspect, 1.0f, 1.0f));
 
   theta += 0.01;
 
@@ -133,7 +141,7 @@ void render(mesh paddle_mesh,
 
       mat4x4 t = translate(vec3(px, py, 0.0));
 
-      mat4x4 trans = t * rx * s;
+      mat4x4 trans = a * t * rx * s;
 
       //mat3x3 normal_trans = transpose(inverse(submatrix(trans, 0, 0)));
       mat3x3 normal_trans = submatrix(rx, 3, 3);
@@ -161,7 +169,7 @@ void render(mesh paddle_mesh,
     float py = ((float)26 / 28.0) * -2.0 + 1.0 - 1.0f / 28.0f;
     mat4x4 t = translate(vec3(px, py, 0.0));
 
-    mat4x4 trans = t * rx * s;
+    mat4x4 trans = a * t * rx * s;
     mat3x3 normal_trans = submatrix(rx, 3, 3);
     //vec3 base_color = vec3(1, 1, 1);
     vec3 base_color = vec3(1, 1, 1) * 0.5f;
@@ -169,6 +177,60 @@ void render(mesh paddle_mesh,
 
     glBindBuffer(GL_ARRAY_BUFFER, paddle_mesh.vtx);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, paddle_mesh.idx);
+
+    glVertexAttribPointer(attrib_position,
+                          3,
+                          GL_FLOAT,
+                          GL_FALSE,
+                          (sizeof (float)) * 8,
+                          (void*)(0 * 4)
+                          );
+    /*
+      glVertexAttribPointer(vertex_color_attrib_texture,
+      2,
+      GL_FLOAT,
+      GL_FALSE,
+      (sizeof (float)) * 8,
+      (void*)(3 * 4)
+      );
+    */
+    glVertexAttribPointer(attrib_normal,
+                          3,
+                          GL_FLOAT,
+                          GL_FALSE,
+                          (sizeof (float)) * 8,
+                          (void*)(5 * 4)
+                          );
+    glEnableVertexAttribArray(attrib_position);
+    glEnableVertexAttribArray(attrib_normal);
+
+    glUniform4fv(uniform_trans, 4, &trans[0][0]);
+    glUniform3fv(uniform_normal_trans, 3, &normal_trans[0][0]);
+    glUniform3fv(uniform_base_color, 1, &base_color[0]);
+    glUniform3fv(uniform_light_pos, 1, &light_pos[0]);
+
+    glDrawElements(GL_TRIANGLES, paddle_mesh.length, GL_UNSIGNED_INT, 0);
+  }
+
+  //////////////////////////////////////////////////////////////////////
+  // render ball
+  //////////////////////////////////////////////////////////////////////
+
+  {
+    mat4x4 rx = rotate_y(PI / 2.0f);
+    mat4x4 s = scale(0.03f);
+    float px = ((float)paddle_x / 13.0) * 2.0 - 1.0 + 1.0f / 13.0f;
+    float py = ((float)25 / 28.0) * -2.0 + 1.0 - 1.0f / 28.0f;
+    mat4x4 t = translate(vec3(px, py, 0.0));
+
+    mat4x4 trans = a * t * rx * s;
+    mat3x3 normal_trans = submatrix(rx, 3, 3);
+    //vec3 base_color = vec3(1, 1, 1);
+    vec3 base_color = vec3(1, 1, 1) * 0.5f;
+    //vec3 light_pos = vec3(-1, -1, 1);
+
+    glBindBuffer(GL_ARRAY_BUFFER, ball_mesh.vtx);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ball_mesh.idx);
 
     glVertexAttribPointer(attrib_position,
                           3,

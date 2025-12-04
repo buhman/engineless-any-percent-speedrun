@@ -13,9 +13,10 @@
 
 #include "model/brick.h"
 #include "model/paddle.h"
+#include "model/ball.h"
 
-static int vp_width = 1200;
-static int vp_height = 1200;
+int vp_width = 2400;
+int vp_height = 1200;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -76,6 +77,7 @@ int main()
 
   struct mesh paddle_mesh;
   struct mesh brick_mesh;
+  struct mesh ball_mesh;
   brick_mesh.vtx = make_buffer(GL_ARRAY_BUFFER, brick_vertices, (sizeof (brick_vertices)));
   brick_mesh.idx = make_buffer(GL_ELEMENT_ARRAY_BUFFER, brick_Cube_triangles, (sizeof (brick_Cube_triangles)));
   brick_mesh.length = brick_Cube_triangles_length;
@@ -83,6 +85,10 @@ int main()
   paddle_mesh.vtx = make_buffer(GL_ARRAY_BUFFER, paddle_vertices, (sizeof (paddle_vertices)));
   paddle_mesh.idx = make_buffer(GL_ELEMENT_ARRAY_BUFFER, paddle_Cylinder_triangles, (sizeof (paddle_Cylinder_triangles)));
   paddle_mesh.length = paddle_Cylinder_triangles_length;
+
+  ball_mesh.vtx = make_buffer(GL_ARRAY_BUFFER, ball_vertices, (sizeof (ball_vertices)));
+  ball_mesh.idx = make_buffer(GL_ELEMENT_ARRAY_BUFFER, ball_Icosphere_triangles, (sizeof (ball_Icosphere_triangles)));
+  ball_mesh.length = ball_Icosphere_triangles_length;
 
   uint program = compile_shader(src_shader_vertex_color_vp_glsl_start,
                                 src_shader_vertex_color_vp_glsl_size,
@@ -146,6 +152,7 @@ int main()
 
     render(paddle_mesh,
            brick_mesh,
+           ball_mesh,
            attrib_position,
            attrib_normal,
            uniform_trans,
