@@ -13,6 +13,8 @@ CXXSTD += -std=gnu++23
 CFLAGS += -Wall -Werror -Wfatal-errors
 CFLAGS += -Wno-error=unused-function
 CFLAGS += -Wno-error=unused-const-variable
+CFLAGS += -Wno-error=unused-but-set-variable
+CFLAGS += -Wno-error=unused-variable
 CFLAGS += -I$(MAKEFILE_PATH)/include
 LDFLAGS += -lm
 
@@ -59,8 +61,8 @@ define BUILD_BINARY_H
 	@echo 'extern uint32_t $(call as_obj_binary_p,$<)_end __asm("$(call as_obj_binary_p,$<)_end");' >> $@
 	@echo 'extern uint32_t $(call as_obj_binary_p,$<)_size __asm("$(call as_obj_binary_p,$<)_size");' >> $@
 	@echo '' >> $@
-	@echo '#define $(call as_obj_binary,$<)_start ((void *)&$(call as_obj_binary_p,$<)_start)' >> $@
-	@echo '#define $(call as_obj_binary,$<)_end ((void *)&$(call as_obj_binary_p,$<)_end)' >> $@
+	@echo '#define $(call as_obj_binary,$<)_start ((const char *)&$(call as_obj_binary_p,$<)_start)' >> $@
+	@echo '#define $(call as_obj_binary,$<)_end ((const char *)&$(call as_obj_binary_p,$<)_end)' >> $@
 	@echo '#define $(call as_obj_binary,$<)_size ($(call as_obj_binary,$<)_end - $(call as_obj_binary,$<)_start)' >> $@
 	@echo '' >> $@
 	@echo '#ifdef __cplusplus' >> $@
@@ -72,6 +74,18 @@ endef
 	$(BUILD_BINARY_O)
 
 include/shader/%.glsl.h: src/shader/%.glsl
+	$(BUILD_BINARY_H)
+
+%.data.o: %.data
+	$(BUILD_BINARY_O)
+
+include/level/%.data.h: src/level/%.data
+	$(BUILD_BINARY_H)
+
+%.data.pal.o: %.data.pal
+	$(BUILD_BINARY_O)
+
+include/level/%.data.pal.h: src/level/%.data.pal
 	$(BUILD_BINARY_H)
 
 clean:
@@ -88,7 +102,10 @@ MAIN_OBJS = \
 	src/main.o \
 	src/glad.o \
 	src/opengl.o \
+	src/render.o \
 	$(patsubst %.glsl,%.glsl.o,$(wildcard src/shader/*.glsl)) \
+	$(patsubst %.data,%.data.o,$(wildcard src/level/*.data)) \
+	$(patsubst %.data.pal,%.data.pal.o,$(wildcard src/level/*.data.pal)) \
 	$(GLFW)
 
 main: $(MAIN_OBJS)

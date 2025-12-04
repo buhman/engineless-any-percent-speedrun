@@ -9,11 +9,12 @@
 #include "shader/vertex_color.vp.glsl.h"
 
 #include "opengl.h"
+#include "render.hpp"
 
-static int vp_width = 800;
-static int vp_height = 600;
+#include "model/brick.h"
 
-typedef unsigned int uint;
+static int vp_width = 1200;
+static int vp_height = 1200;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -64,26 +65,30 @@ int main()
   // buffer initialization
   //////////////////////////////////////////////////////////////////////
 
+  /*
   uint triangle_vertex_buffer = make_buffer(GL_ARRAY_BUFFER,
                                             triangle_vertex_buffer_data,
                                             (sizeof (triangle_vertex_buffer_data)));
+  */
 
-  uint vertex_color_program = compile_shader(src_shader_vertex_color_vp_glsl_start,
-                                             src_shader_vertex_color_vp_glsl_size,
-                                             src_shader_vertex_color_fp_glsl_start,
-                                             src_shader_vertex_color_fp_glsl_size);
-  glUseProgram(vertex_color_program);
-  uint vertex_color_attrib_position = glGetAttribLocation(vertex_color_program, "position");
-  uint vertex_color_attrib_color = glGetAttribLocation(vertex_color_program, "color");
+  uint vtx = make_buffer(GL_ARRAY_BUFFER, brick_vertices, (sizeof (brick_vertices)));
+  uint idx = make_buffer(GL_ELEMENT_ARRAY_BUFFER, brick_Cube_triangles, (sizeof (brick_Cube_triangles)));
+
+  uint program = compile_shader(src_shader_vertex_color_vp_glsl_start,
+                                src_shader_vertex_color_vp_glsl_size,
+                                src_shader_vertex_color_fp_glsl_start,
+                                src_shader_vertex_color_fp_glsl_size);
+  glUseProgram(program);
+  uint attrib_position = glGetAttribLocation(program, "position");
+  uint attrib_normal = glGetAttribLocation(program, "normal");
+  uint uniform_trans = glGetUniformLocation(program, "trans");
+  uint uniform_normal_trans = glGetUniformLocation(program, "normal_trans");
+  uint uniform_base_color = glGetUniformLocation(program, "base_color");
+  uint uniform_light_pos = glGetUniformLocation(program, "light_pos");
 
   //////////////////////////////////////////////////////////////////////
   // main loop
   //////////////////////////////////////////////////////////////////////
-
-  fwrite(src_shader_vertex_color_fp_glsl_start,
-         src_shader_vertex_color_fp_glsl_size,
-         1,
-         stdout);
 
   const double frame_rate = 60.0;
   const double first_frame = glfwGetTime();
@@ -93,26 +98,20 @@ int main()
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
       glfwSetWindowShouldClose(window, true);
 
-    glBindBuffer(GL_ARRAY_BUFFER, triangle_vertex_buffer);
-    glVertexAttribPointer(vertex_color_attrib_position,
-                          3,
-                          GL_FLOAT,
-                          GL_FALSE,
-                          (sizeof (float)) * 6,
-                          (void*)0
-                          );
-    glVertexAttribPointer(vertex_color_attrib_color,
-                          3,
-                          GL_FLOAT,
-                          GL_FALSE,
-                          (sizeof (float)) * 6,
-                          (void*)(3 * 4)
-                          );
-    glEnableVertexAttribArray(vertex_color_attrib_position);
-    glEnableVertexAttribArray(vertex_color_attrib_color);
-
+    glEnable(GL_DEPTH_TEST);
+    glClearDepth(-1000.0f);
+    glDepthFunc(GL_GREATER);
+    glClearColor(0.1, 0.2, 0.3, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    render(vtx, idx,
+           attrib_position,
+           attrib_normal,
+           uniform_trans,
+           uniform_normal_trans,
+           uniform_base_color,
+           uniform_light_pos,
+           brick_Cube_triangles_length);
 
     glfwSwapBuffers(window);
     glfwPollEvents();

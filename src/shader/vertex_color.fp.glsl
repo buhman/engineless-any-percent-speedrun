@@ -1,8 +1,24 @@
 #version 120
 
-//varying vec3 color_out;
+uniform vec3 base_color;
+uniform vec3 light_pos;
+
+varying vec3 fp_position;
+varying vec3 fp_normal;
 
 void main()
 {
-  gl_FragColor = gl_Color;
+  //vec3 color_normal = fp_normal * 0.5 + 0.5;
+  //vec3 light_pos = vec3(1, 1, 1);
+
+  vec3 light_dir = normalize(light_pos - fp_position);
+  float diffuse = max(dot(fp_normal, light_dir), 0.0);
+
+  vec3 color = (diffuse + 0.5) * base_color;
+
+  gl_FragColor = vec4(color, 1.0);
 }
+// normal
+// x (0.0 left 1.0 right)
+// y (0.0 bot 1.0 top)
+// z (0.0 far 1.0 near)
