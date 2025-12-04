@@ -7,8 +7,12 @@
 #include "shader/vertex_color.fp.glsl.h"
 #include "shader/vertex_color.vp.glsl.h"
 
+#include "opengl.h"
+
 static int vp_width = 800;
 static int vp_height = 600;
+
+typedef unsigned int uint;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -59,16 +63,17 @@ int main()
   // buffer initialization
   //////////////////////////////////////////////////////////////////////
 
-  /*
-  unsigned int triangle_vertex_buffer = make_buffer(GL_ARRAY_BUFFER,
-                                                    triangle_vertex_buffer_data,
-                                                    (sizeof (triangle_vertex_buffer_data)));
-  */
+  uint triangle_vertex_buffer = make_buffer(GL_ARRAY_BUFFER,
+                                            triangle_vertex_buffer_data,
+                                            (sizeof (triangle_vertex_buffer_data)));
 
-  /*
-  vertex_color.program = compile_shaders("src/vertex_color.vp.glsl",
-                                         "src/vertex_color_fp_render.fp.glsl");
-  */
+  uint vertex_color_program = compile_shader(src_shader_vertex_color_vp_glsl_start,
+                                             src_shader_vertex_color_vp_glsl_size,
+                                             src_shader_vertex_color_fp_glsl_start,
+                                             src_shader_vertex_color_fp_glsl_size);
+  glUseProgram(vertex_color_program);
+  uint vertex_color_attrib_position = glGetAttribLocation(vertex_color_program, "position");
+  uint vertex_color_attrib_color = glGetAttribLocation(vertex_color_program, "color");
 
   //////////////////////////////////////////////////////////////////////
   // main loop
@@ -82,6 +87,29 @@ int main()
   while(!glfwWindowShouldClose(window)) {
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
       glfwSetWindowShouldClose(window, true);
+
+    glBindBuffer(GL_ARRAY_BUFFER, triangle_vertex_buffer);
+    glVertexAttribPointer(vertex_color_attrib_position,
+                          3,
+                          GL_FLOAT,
+                          GL_FALSE,
+                          (sizeof (float)) * 6,
+                          (void*)0
+                          );
+    glVertexAttribPointer(vertex_color_attrib_color,
+                          3,
+                          GL_FLOAT,
+                          GL_FALSE,
+                          (sizeof (float)) * 6,
+                          (void*)(3 * 4)
+                          );
+    glEnableVertexAttribArray(vertex_color_attrib_position);
+    glEnableVertexAttribArray(vertex_color_attrib_color);
+
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    glfwSwapBuffers(window);
+    glfwPollEvents();
   }
 
   glfwTerminate();
