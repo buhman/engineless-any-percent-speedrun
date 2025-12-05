@@ -1,6 +1,6 @@
 #version 120
 
-uniform vec3 base_color;
+uniform vec4 base_color;
 uniform vec3 light_pos;
 
 varying vec3 fp_position;
@@ -15,9 +15,9 @@ void main()
   vec3 light_dir = normalize(light_pos - fp_position);
   float diffuse = max(dot(fp_normal, light_dir), 0.0);
 
-  vec3 color = (diffuse + 0.5) * base_color;
+  vec3 color = (diffuse + 0.5) * base_color.xyz;
 
-  gl_FragColor = vec4(color, 1.0);
+  gl_FragColor = vec4(color, base_color.w);
   //gl_FragColor = vec4(fp_normal * 0.5 + 0.5, 1.0);
   //gl_FragColor = vec4(fp_texture, 0.0, 1.0);
 }

@@ -167,6 +167,8 @@ int main()
   reset_level(&state);
   state.start_time = glfwGetTime();
 
+  glEnable(GL_DEPTH_TEST);
+
   while(!glfwWindowShouldClose(window)) {
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
       glfwSetWindowShouldClose(window, true);
@@ -209,9 +211,8 @@ int main()
     if (state.paddle_x > 12 - extent)
       state.paddle_x = 12 - extent;
 
-    update(&state);
     double time = glfwGetTime();
-    state.remaining = 20.0 - (time - state.start_time);
+    update(&state, time);
 
     if ((state.ball_x + state.ball_dx * 0.4) > 12.25f) {
       state.ball_x = 12.25f;
@@ -229,7 +230,8 @@ int main()
       state.ball_dy = -state.ball_dy;
     }
 
-    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthFunc(GL_GREATER);
     glUseProgram(program);
 
@@ -245,7 +247,7 @@ int main()
            uniform_light_pos,
            &state);
 
-    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_BLEND);
     glDepthFunc(GL_ALWAYS);
     glUseProgram(font_program);
 

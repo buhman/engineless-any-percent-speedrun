@@ -7,7 +7,7 @@ extern "C" {
 #endif
 
   void reset_level(struct game_state * state);
-  void update(struct game_state * state);
+  void update(struct game_state * state, double time);
 
 #ifdef __cplusplus
 }

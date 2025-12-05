@@ -133,20 +133,26 @@ void render(mesh paddle_mesh,
 
   for (int y = 0; y < 28; y++) {
     for (int x = 0; x < 13; x++) {
-      char tile = state->level[y * 13 + x];
-      //if (tile == 0)
-        //continue;
+      int block_ix = y * 13 + x;
+      char tile = state->level[block_ix];
+      if (tile == 0)
+        continue;
+      double destroyed_time = state->blocks[block_ix].destroyed_time;
+      double dt = state->time - destroyed_time;
+      if (destroyed_time != 0.0 && dt >= 2.0)
+        continue;
 
       const float cs = 1.0f / 255.0f;
-      vec3 base_color = vec3(((float)state->pal[tile * 3 + 0]) * cs,
+
+      vec4 base_color = vec4(((float)state->pal[tile * 3 + 0]) * cs,
                              ((float)state->pal[tile * 3 + 1]) * cs,
-                             ((float)state->pal[tile * 3 + 2]) * cs);
+                             ((float)state->pal[tile * 3 + 2]) * cs,
+                             1.0f);
+      if (destroyed_time != 0.0) {
+        base_color = vec4(1, 0, 0, (float)((2.0 - dt) * 0.5));
+      }
 
       vec3 block_position = vec3(x * 4.0f, -y * 2.0f, 0.0f);
-      vec3 ball_position = vec3(state->ball_x * 4.0f, -state->ball_y * 2.0f, 0.0);
-      bool collided = aabb_circle_collision(block_position, ball_position);
-      if (collided)
-        base_color = vec3(1, 0, 0);
 
       mat4x4 rx = rotate_x(-PI / 2.0f);
       mat4x4 t = translate(block_position);
@@ -158,7 +164,7 @@ void render(mesh paddle_mesh,
 
       glUniform4fv(uniform_trans, 4, &trans[0][0]);
       glUniform3fv(uniform_normal_trans, 3, &normal_trans[0][0]);
-      glUniform3fv(uniform_base_color, 1, &base_color[0]);
+      glUniform4fv(uniform_base_color, 1, &base_color[0]);
       glUniform3fv(uniform_light_pos, 1, &light_pos[0]);
 
       glDrawElements(GL_TRIANGLES, block_mesh.length, GL_UNSIGNED_INT, 0);
@@ -176,8 +182,7 @@ void render(mesh paddle_mesh,
 
     mat4x4 trans = a * t * rx;
     mat3x3 normal_trans = submatrix(rx, 3, 3);
-    //vec3 base_color = vec3(1, 1, 1);
-    vec3 base_color = vec3(1, 1, 1) * 0.5f;
+    vec4 base_color = vec4(0.5f, 0.5f, 0.5f, 1.0f);
     //vec3 light_pos = vec3(-1, -1, 1);
 
     glBindBuffer(GL_ARRAY_BUFFER, paddle_mesh.vtx);
@@ -210,7 +215,7 @@ void render(mesh paddle_mesh,
 
     glUniform4fv(uniform_trans, 4, &trans[0][0]);
     glUniform3fv(uniform_normal_trans, 3, &normal_trans[0][0]);
-    glUniform3fv(uniform_base_color, 1, &base_color[0]);
+    glUniform4fv(uniform_base_color, 1, &base_color[0]);
     glUniform3fv(uniform_light_pos, 1, &light_pos[0]);
 
     glDrawElements(GL_TRIANGLES, paddle_mesh.length, GL_UNSIGNED_INT, 0);
@@ -226,8 +231,7 @@ void render(mesh paddle_mesh,
 
     mat4x4 trans = a * t * rx;
     mat3x3 normal_trans = submatrix(rx, 3, 3);
-    //vec3 base_color = vec3(1, 1, 1);
-    vec3 base_color = vec3(1, 1, 1) * 0.5f;
+    vec4 base_color = vec4(0.5f, 0.5f, 0.5f, 1.0f);
     //vec3 light_pos = vec3(-1, -1, 1);
 
     glBindBuffer(GL_ARRAY_BUFFER, ball_mesh.vtx);
@@ -260,7 +264,7 @@ void render(mesh paddle_mesh,
 
     glUniform4fv(uniform_trans, 4, &trans[0][0]);
     glUniform3fv(uniform_normal_trans, 3, &normal_trans[0][0]);
-    glUniform3fv(uniform_base_color, 1, &base_color[0]);
+    glUniform4fv(uniform_base_color, 1, &base_color[0]);
     glUniform3fv(uniform_light_pos, 1, &light_pos[0]);
 
     glDrawElements(GL_TRIANGLES, paddle_mesh.length, GL_UNSIGNED_INT, 0);

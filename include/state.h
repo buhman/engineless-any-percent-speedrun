@@ -7,7 +7,7 @@ extern "C" {
 #endif
 
   struct block_state {
-    float destroyed_time;
+    double destroyed_time;
   };
 
   struct game_state {
@@ -24,6 +24,7 @@ extern "C" {
     float ball_dy;
 
     double start_time;
+    double time;
     double remaining;
   };
 
