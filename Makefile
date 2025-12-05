@@ -17,6 +17,9 @@ CFLAGS += -Wno-error=unused-but-set-variable
 CFLAGS += -Wno-error=unused-variable
 CFLAGS += -I$(MAKEFILE_PATH)/include
 LDFLAGS += -lm
+ifeq ($(OS),Windows_NT)
+LDFLAGS += -Wl,--subsystem,windows -mwindows
+endif
 
 ifndef GLFW
 $(error GLFW undefined)
