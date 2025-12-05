@@ -198,8 +198,8 @@ int main()
         float sensitivity = 0.4f;
         paddle_dx = (right - left) * sensitivity;
 
-        state.ball_dx = deadzone(axes[0]);
-        state.ball_dy = deadzone(axes[1]);
+        //state.ball_dx = deadzone(axes[0]);
+        //state.ball_dy = deadzone(axes[1]);
         break;
       }
     }
@@ -213,22 +213,6 @@ int main()
 
     double time = glfwGetTime();
     update(&state, time);
-
-    if ((state.ball_x + state.ball_dx * 0.4) > 12.25f) {
-      state.ball_x = 12.25f;
-      state.ball_dx = -state.ball_dx;
-    } else if ((state.ball_x + state.ball_dx * 0.4) < -0.25f) {
-      state.ball_x = -0.25f;
-      state.ball_dx = -state.ball_dx;
-    }
-
-    if ((state.ball_y + state.ball_dy * 0.4) > 27.0f) {
-      state.ball_y = 27.0f;
-      state.ball_dy = -state.ball_dy;
-    } else if ((state.ball_y + state.ball_dy * 0.4) < 0.0f) {
-      state.ball_y = 0.0f;
-      state.ball_dy = -state.ball_dy;
-    }
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

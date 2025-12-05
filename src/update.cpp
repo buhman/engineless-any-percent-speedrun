@@ -36,8 +36,23 @@ void reset_level(struct game_state * state)
   }
 }
 
+static inline void ball_collision_response(struct game_state * state,
+                                           struct collision_data& cd)
+{
+  state->ball_x = cd.escape_position.x / 4.0f;
+  state->ball_y = -cd.escape_position.y / 2.0f;
+  vec3 vel = reflect(vec3(state->ball_dx, state->ball_dy, 0), cd.bounds_normal);
+  state->ball_dx = vel.x;
+  state->ball_dy = vel.y;
+}
+
 void update(struct game_state * state, double time)
 {
+  vec3 ball_position = vec3(state->ball_x * 4.0f, -state->ball_y * 2.0f, 0.0);
+
+  //////////////////////////////////////////////////////////////////////
+  // block collision
+  //////////////////////////////////////////////////////////////////////
   for (int y = 0; y < 28; y++) {
     for (int x = 0; x < 13; x++) {
       int block_ix = y * 13 + x;
@@ -48,24 +63,50 @@ void update(struct game_state * state, double time)
         continue;
 
       vec3 block_position = vec3(x * 4.0f, -y * 2.0f, 0.0f);
-      vec3 ball_position = vec3(state->ball_x * 4.0f, -state->ball_y * 2.0f, 0.0);
 
       // paddle 6.0
       // block 4.0
-      // const vec3 paddle_bounds = vec3(3, 1, 0);
       const vec3 block_bounds = vec3(2, 1, 0);
       struct collision_data cd;
       bool collided = aabb_circle_collision(block_position, ball_position, block_bounds, &cd);
       if (collided) {
-        state->ball_x = cd.escape_position.x / 4.0f;
-        state->ball_y = -cd.escape_position.y / 2.0f;
-        vec3 vel = reflect(vec3(state->ball_dx, state->ball_dy, 0), cd.bounds_normal);
-        state->ball_dx = vel.x;
-        state->ball_dy = vel.y;
-
+        ball_collision_response(state, cd);
         state->blocks[block_ix].destroyed_time = time;
       }
     }
+  }
+
+  vec3 paddle_position = vec3(state->paddle_x * 4.0f, -state->paddle_y * 2.0f, 0.0);
+
+  //////////////////////////////////////////////////////////////////////
+  // paddle collision
+  //////////////////////////////////////////////////////////////////////
+  {
+    const vec3 paddle_bounds = vec3(3, 1, 0);
+    struct collision_data cd;
+    bool collided = aabb_circle_collision(paddle_position, ball_position, paddle_bounds, &cd);
+    if (collided) {
+      ball_collision_response(state, cd);
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////
+  // arena collision
+  //////////////////////////////////////////////////////////////////////
+  if ((state->ball_x + state->ball_dx * 0.4) > 12.25f) {
+    state->ball_x = 12.25f;
+    state->ball_dx = -state->ball_dx;
+  } else if ((state->ball_x + state->ball_dx * 0.4) < -0.25f) {
+    state->ball_x = -0.25f;
+    state->ball_dx = -state->ball_dx;
+  }
+
+  if ((state->ball_y + state->ball_dy * 0.4) > 27.0f) {
+    //state->ball_y = 27.0f;
+    //state->ball_dy = -state->ball_dy;
+  } else if ((state->ball_y + state->ball_dy * 0.4) < 0.0f) {
+    state->ball_y = 0.0f;
+    state->ball_dy = -state->ball_dy;
   }
 
   state->ball_x += state->ball_dx;
