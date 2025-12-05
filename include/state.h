@@ -10,6 +10,15 @@ extern "C" {
     double destroyed_time;
   };
 
+  struct ball_state {
+    float ball_x;
+    float ball_y;
+    float ball_dx;
+    float ball_dy;
+  };
+
+  #define MAX_BALLS 20
+
   struct game_state {
     struct block_state blocks[28 * 13];
     const uint8_t * level;
@@ -18,10 +27,8 @@ extern "C" {
     float paddle_x;
     float paddle_y;
 
-    float ball_x;
-    float ball_y;
-    float ball_dx;
-    float ball_dy;
+    struct ball_state balls[MAX_BALLS];
+    int balls_launched;
 
     double start_time;
     double time;

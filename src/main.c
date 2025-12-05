@@ -163,7 +163,7 @@ int main()
   double frames = 1;
   const char * last_gamepad_name = NULL;
 
-  struct game_state state;
+  struct game_state state = {0};
   reset_level(&state);
   state.start_time = glfwGetTime();
 
@@ -179,14 +179,27 @@ int main()
 
     float paddle_dx = 0.0;
     //float paddle_dy = 0.0;
+    static bool last_x_press = false;
+    bool x_press = false;
 
     for (int i = 0; i < 16; i++) {
       int present = glfwJoystickPresent(GLFW_JOYSTICK_1 + i);
       int is_gamepad = glfwJoystickIsGamepad(GLFW_JOYSTICK_1 + i);
       int count;
       const float * axes = glfwGetJoystickAxes(GLFW_JOYSTICK_1 + i, &count);
+
       //printf("present, %d %d %s %d\n", i, count, name, is_gamepad);
       if (present && is_gamepad && count == 6) {
+        const unsigned char * buttons = glfwGetJoystickButtons(GLFW_JOYSTICK_1 + i, &count);
+        /*
+        printf("buttons count %d\n", count);
+        for (int i = 0; i < count; i++) {
+          printf("[% 2d % 2d] ", i, buttons[i]);
+        }
+        printf("\n");
+        */
+        x_press = buttons[0] != 0;
+
         const char * name = glfwGetJoystickName(GLFW_JOYSTICK_1 + i);
         if (name != last_gamepad_name) {
           printf("active gamepad: `%s`; axes: %d\n", name, count);
@@ -203,6 +216,11 @@ int main()
         break;
       }
     }
+
+    if (!last_x_press && x_press) {
+      launch_ball(&state);
+    }
+    last_x_press = x_press;
 
     float extent = 0.25;
     state.paddle_x += paddle_dx;

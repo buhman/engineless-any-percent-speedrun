@@ -12,16 +12,26 @@
 #include "math/float_types.hpp"
 #include "math/transform.hpp"
 
+void launch_ball(struct game_state * state)
+{
+  if (state->balls_launched >= MAX_BALLS)
+    return;
+
+  struct ball_state& ball = state->balls[state->balls_launched];
+  ball.ball_x = state->paddle_x;
+  ball.ball_y = 25.0;
+  ball.ball_dx = 0.1;
+  ball.ball_dy = -0.1;
+
+  state->balls_launched += 1;
+}
+
 void reset_level(struct game_state * state)
 {
   state->paddle_x = 0.0;
   state->paddle_y = 26.0;
 
-  state->ball_x = 0.0;
-  state->ball_y = 25.0;
-
-  state->ball_dx = 0.1;
-  state->ball_dy = 0.1;
+  launch_ball(state);
 
   state->start_time = 0.0;
 
@@ -36,19 +46,19 @@ void reset_level(struct game_state * state)
   }
 }
 
-static inline void ball_collision_response(struct game_state * state,
+static inline void ball_collision_response(struct ball_state& ball,
                                            struct collision_data& cd)
 {
-  state->ball_x = cd.escape_position.x / 4.0f;
-  state->ball_y = -cd.escape_position.y / 2.0f;
-  vec3 vel = reflect(vec3(state->ball_dx, state->ball_dy, 0), cd.bounds_normal);
-  state->ball_dx = vel.x;
-  state->ball_dy = vel.y;
+  ball.ball_x = cd.escape_position.x / 4.0f;
+  ball.ball_y = -cd.escape_position.y / 2.0f;
+  vec3 vel = reflect(vec3(ball.ball_dx, ball.ball_dy, 0), cd.bounds_normal);
+  ball.ball_dx = vel.x;
+  ball.ball_dy = vel.y;
 }
 
-void update(struct game_state * state, double time)
+void update_ball(struct game_state * state, struct ball_state& ball, double time)
 {
-  vec3 ball_position = vec3(state->ball_x * 4.0f, -state->ball_y * 2.0f, 0.0);
+  vec3 ball_position = vec3(ball.ball_x * 4.0f, -ball.ball_y * 2.0f, 0.0);
 
   //////////////////////////////////////////////////////////////////////
   // block collision
@@ -70,7 +80,7 @@ void update(struct game_state * state, double time)
       struct collision_data cd;
       bool collided = aabb_circle_collision(block_position, ball_position, block_bounds, &cd);
       if (collided) {
-        ball_collision_response(state, cd);
+        ball_collision_response(ball, cd);
         state->blocks[block_ix].destroyed_time = time;
       }
     }
@@ -86,31 +96,41 @@ void update(struct game_state * state, double time)
     struct collision_data cd;
     bool collided = aabb_circle_collision(paddle_position, ball_position, paddle_bounds, &cd);
     if (collided) {
-      ball_collision_response(state, cd);
+      ball_collision_response(ball, cd);
     }
   }
 
   //////////////////////////////////////////////////////////////////////
   // arena collision
   //////////////////////////////////////////////////////////////////////
-  if ((state->ball_x + state->ball_dx * 0.4) > 12.25f) {
-    state->ball_x = 12.25f;
-    state->ball_dx = -state->ball_dx;
-  } else if ((state->ball_x + state->ball_dx * 0.4) < -0.25f) {
-    state->ball_x = -0.25f;
-    state->ball_dx = -state->ball_dx;
+  if ((ball.ball_x + ball.ball_dx * 0.4) > 12.25f) {
+    ball.ball_x = 12.25f;
+    ball.ball_dx = -ball.ball_dx;
+  } else if ((ball.ball_x + ball.ball_dx * 0.4) < -0.25f) {
+    ball.ball_x = -0.25f;
+    ball.ball_dx = -ball.ball_dx;
   }
 
-  if ((state->ball_y + state->ball_dy * 0.4) > 27.0f) {
-    //state->ball_y = 27.0f;
-    //state->ball_dy = -state->ball_dy;
-  } else if ((state->ball_y + state->ball_dy * 0.4) < 0.0f) {
-    state->ball_y = 0.0f;
-    state->ball_dy = -state->ball_dy;
+  if ((ball.ball_y + ball.ball_dy * 0.4) > 27.0f) {
+    //ball.ball_y = 27.0f;
+    //ball.ball_dy = -ball.ball_dy;
+  } else if ((ball.ball_y + ball.ball_dy * 0.4) < 0.0f) {
+    ball.ball_y = 0.0f;
+    ball.ball_dy = -ball.ball_dy;
   }
 
-  state->ball_x += state->ball_dx;
-  state->ball_y += state->ball_dy;
+  ball.ball_x += ball.ball_dx;
+  ball.ball_y += ball.ball_dy;
+}
+
+void update(struct game_state * state, double time)
+{
+  for (int i = 0; i < state->balls_launched; i++) {
+    if (state->balls[i].ball_y > 30.0f)
+      continue;
+
+    update_ball(state, state->balls[i], time);
+  }
 
   state->time = time;
   state->remaining = 20.0 - (time - state->start_time);

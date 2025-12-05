@@ -222,12 +222,15 @@ void render(mesh paddle_mesh,
   }
 
   //////////////////////////////////////////////////////////////////////
-  // render ball
+  // render balls
   //////////////////////////////////////////////////////////////////////
 
-  {
+  for (int i = 0; i < state->balls_launched; i++) {
+    struct ball_state& ball = state->balls[i];
+
     mat4x4 rx = rotate_y(PI / 2.0f);
-    mat4x4 t = translate(vec3(state->ball_x * 4.0f, -state->ball_y * 2.0f, 0.0));
+    vec3 ball_position = vec3(ball.ball_x * 4.0f, -ball.ball_y * 2.0f, 0.0);
+    mat4x4 t = translate(ball_position);
 
     mat4x4 trans = a * t * rx;
     mat3x3 normal_trans = submatrix(rx, 3, 3);
