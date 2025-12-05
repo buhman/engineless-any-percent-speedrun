@@ -4,6 +4,7 @@
 
 #include "glad/glad.h"
 
+#include "collision.hpp"
 #include "render.hpp"
 #include "math/float_types.hpp"
 #include "math/transform.hpp"
@@ -57,14 +58,18 @@ mat4x4 perspective(float low1, float high1,
   return m3;
 }
 
+static const float x_scale = 1.0f / 12.0f;
+//static const float y_scale = 1.0f / 27.0f;
+static const float y_scale = 1.0f / 12.0f;
+
 static inline float px(float x)
 {
-  return (x / 12.0) * 2.0 - 1.0 + 1.0f / 12.0f;
+  return (x * x_scale) * 2.0 - 1.0 + x_scale;
 }
 
 static inline float py(float y)
 {
-  return (y / 27.0) * -2.0 + 1.0 - 1.0f / 27.0f;
+  return (y * y_scale) * -2.0 + 1.0 - y_scale;
 }
 
 /*
@@ -81,13 +86,15 @@ void render(mesh paddle_mesh,
             uint uniform_normal_trans,
             uint uniform_base_color,
             uint uniform_light_pos,
-            float paddle_x)
+            struct game_state * state)
 {
   static float theta = 0;
 
   float aspect = (float)vp_height / (float)vp_width;
 
-  mat4x4 a = scale(vec3(aspect, 1.0f, 1.0f));
+  mat4x4 p = perspective(-1, 1, 0, 1);
+  mat4x4 tt = translate(vec3(-1.2f, 1.4f, 2.0f));
+  mat4x4 a = scale(vec3(aspect, 1.0f, 1.0f)) * p * tt * scale(0.05f);// * rotate_x(PI / 4.0f);
 
   theta += 0.01;
 
@@ -132,23 +139,27 @@ void render(mesh paddle_mesh,
   for (int y = 0; y < 28; y++) {
     for (int x = 0; x < 13; x++) {
       char tile = level[y * 13 + x];
-      if (tile == 0)
-        continue;
+      //if (tile == 0)
+      //continue;
 
       const float cs = 1.0f / 255.0f;
       vec3 base_color = vec3(((float)pal[tile * 3 + 0]) * cs,
                              ((float)pal[tile * 3 + 1]) * cs,
                              ((float)pal[tile * 3 + 2]) * cs);
 
-      mat4x4 rx = rotate_x(PI / 2.0f);
-      //mat4x4 p = perspective(-1, 1, 0, 1);
-      mat4x4 s = scale(vec3(1.0f / 12.0f,
-                            1.0f / 27.0f,
-                            1.0f / 27.0f));
+      mat4x4 rx = rotate_x(-PI / 2.0f);
+      mat4x4 t = translate(vec3(x * 4.0f, -y * 2.0f, 0.0f));
 
-      mat4x4 t = translate(vec3(px(x), py(y), 0.0));
+      mat4x4 trans = a * t * rx;
 
-      mat4x4 trans = a * t * rx * s;
+      vec4 res = collision(t * rx,
+                           vec3(state->ball_x * 4.0f, -state->ball_y * 2.0f,  0),
+                           vec3(0, 0, 0));
+      bool collision = res.w == 1.0f;
+      if (collision) {
+        //vec3 normal = vec3(res.x, res.y, res.z);
+        base_color = vec3(1, 0, 0);
+      }
 
       //mat3x3 normal_trans = transpose(inverse(submatrix(trans, 0, 0)));
       mat3x3 normal_trans = submatrix(rx, 3, 3);
@@ -169,16 +180,10 @@ void render(mesh paddle_mesh,
 
   {
     mat4x4 rx = rotate_y(PI / 2.0f);
-    mat4x4 s = scale(1.0f / 12.0f);
-    /*
-    mat4x4 s = scale(vec3(1.0f,
-                          1.3f,
-                          1.5f));
-    */
 
-    mat4x4 t = translate(vec3(px(paddle_x), py(26), 0.0));
+    mat4x4 t = translate(vec3(state->paddle_x * 4.0f, -state->paddle_y * 2.0f, 0.0));
 
-    mat4x4 trans = a * t * rx * s;
+    mat4x4 trans = a * t * rx;
     mat3x3 normal_trans = submatrix(rx, 3, 3);
     //vec3 base_color = vec3(1, 1, 1);
     vec3 base_color = vec3(1, 1, 1) * 0.5f;
@@ -226,10 +231,9 @@ void render(mesh paddle_mesh,
 
   {
     mat4x4 rx = rotate_y(PI / 2.0f);
-    mat4x4 s = scale(1.0f / 27.0f);
-    mat4x4 t = translate(vec3(px(paddle_x), py(25), 0.0));
+    mat4x4 t = translate(vec3(state->ball_x * 4.0f, -state->ball_y * 2.0f, 0.0));
 
-    mat4x4 trans = a * t * rx * s;
+    mat4x4 trans = a * t * rx;
     mat3x3 normal_trans = submatrix(rx, 3, 3);
     //vec3 base_color = vec3(1, 1, 1);
     vec3 base_color = vec3(1, 1, 1) * 0.5f;

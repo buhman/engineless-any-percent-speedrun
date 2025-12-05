@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <unistd.h>
+#include <math.h>
 
 #include "glad/glad.h"
 
@@ -14,9 +15,9 @@
 #include "model/block.h"
 #include "model/paddle.h"
 #include "model/ball.h"
-#include "model/cube.h"
+//#include "model/cube.h"
 
-int vp_width = 2400;
+int vp_width = 1600;
 int vp_height = 1200;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -34,6 +35,14 @@ static const float triangle_vertex_buffer_data[] = {
    0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f   // top
 };
 */
+
+float deadzone(float n)
+{
+  if (fabsf(n) < 0.02)
+    return 0.0f;
+  else
+    return n;
+}
 
 int main()
 {
@@ -114,10 +123,18 @@ int main()
   const double frame_rate = 60.0;
   const double first_frame = glfwGetTime();
   double last_frame = first_frame;
-  double frames = 0;
+  double frames = 1;
   const char * last_gamepad_name = NULL;
 
-  float paddle_x = 0.0;
+  struct game_state state;
+  state.paddle_x = 0.0;
+  state.paddle_y = 26.0;
+
+  state.ball_x = 0.0;
+  state.ball_y = 25.0;
+
+  state.ball_dx = 0.1;
+  state.ball_dy = 0.1;
 
   while(!glfwWindowShouldClose(window)) {
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -130,6 +147,8 @@ int main()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     float paddle_dx = 0.0;
+    //float paddle_dy = 0.0;
+
     for (int i = 0; i < 16; i++) {
       int present = glfwJoystickPresent(GLFW_JOYSTICK_1 + i);
       int is_gamepad = glfwJoystickIsGamepad(GLFW_JOYSTICK_1 + i);
@@ -142,19 +161,44 @@ int main()
           printf("active gamepad: `%s`; axes: %d\n", name, count);
           last_gamepad_name = name;
         }
+
         float left = axes[2] * 0.5 + 0.5;
         float right = axes[5] * 0.5 + 0.5;
         paddle_dx = right - left;
+
+        //state.ball_dx = deadzone(axes[0]);
+        //state.ball_dy = deadzone(axes[1]);
         break;
       }
     }
 
     float extent = 0.25;
-    paddle_x += paddle_dx * 0.4;
-    if (paddle_x < extent)
-      paddle_x = extent;
-    if (paddle_x > 12 - extent)
-      paddle_x = 12 - extent;
+    state.paddle_x += paddle_dx * 0.4;
+    if (state.paddle_x < extent)
+      state.paddle_x = extent;
+    if (state.paddle_x > 12 - extent)
+      state.paddle_x = 12 - extent;
+    //state.paddle_y += paddle_dy * 0.4;
+
+    if ((state.ball_x + state.ball_dx * 0.4) > 12.25f) {
+      state.ball_x = 12.25f;
+      state.ball_dx = -state.ball_dx;
+    } else if ((state.ball_x + state.ball_dx * 0.4) < -0.25f) {
+      state.ball_x = -0.25f;
+      state.ball_dx = -state.ball_dx;
+    } else {
+      state.ball_x += state.ball_dx * 0.4;
+    }
+
+    if ((state.ball_y + state.ball_dy * 0.4) > 27.0f) {
+      state.ball_y = 27.0f;
+      state.ball_dy = -state.ball_dy;
+    } else if ((state.ball_y + state.ball_dy * 0.4) < 0.0f) {
+      state.ball_y = 0.0f;
+      state.ball_dy = -state.ball_dy;
+    } else {
+      state.ball_y += state.ball_dy * 0.4;
+    }
 
     render(paddle_mesh,
            block_mesh,
@@ -166,14 +210,17 @@ int main()
            uniform_normal_trans,
            uniform_base_color,
            uniform_light_pos,
-           paddle_x);
+           &state);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
 
     double next_frame = last_frame + 1.0 / frame_rate;
+    last_frame = glfwGetTime();
     while (next_frame - glfwGetTime() > 0) {
       double delta = next_frame - glfwGetTime();
+      if (delta < 0)
+        break;
       glfwWaitEventsTimeout(delta);
     }
     //printf("fps %f\n", frames / (glfwGetTime() - first_frame));

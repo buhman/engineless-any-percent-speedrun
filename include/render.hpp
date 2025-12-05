@@ -1,5 +1,7 @@
 #pragma once
 
+#include "state.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -22,7 +24,7 @@ extern "C" {
               uint uniform_normal_trans,
               uint uniform_base_color,
               uint uniform_light_pos,
-              float paddle_x);
+              struct game_state * state);
 
 #ifdef __cplusplus
 }
