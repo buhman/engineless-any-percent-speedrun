@@ -23,7 +23,7 @@ inline constexpr vec<L, T> normalize(vec<L, T> const& v)
 }
 
 template <int L, typename T>
-inline constexpr vec<3, T> reflect(vec<L, T> const& i, vec<L, T> const& n)
+inline constexpr vec<L, T> reflect(vec<L, T> const& i, vec<L, T> const& n)
 {
   return i - dot(n, i) * n * static_cast<T>(2.0);
 }

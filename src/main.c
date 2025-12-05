@@ -9,13 +9,20 @@
 #include "shader/vertex_color.fp.glsl.h"
 #include "shader/vertex_color.vp.glsl.h"
 
+#include "shader/font.fp.glsl.h"
+#include "shader/font.vp.glsl.h"
+
+#include "font/ter_u32n.data.h"
+
 #include "opengl.h"
 #include "render.hpp"
+#include "update.hpp"
 
 #include "model/block.h"
 #include "model/paddle.h"
 #include "model/ball.h"
 //#include "model/cube.h"
+#include "model/plane.h"
 
 int vp_width = 1600;
 int vp_height = 1200;
@@ -116,6 +123,34 @@ int main()
   uint uniform_base_color = glGetUniformLocation(program, "base_color");
   uint uniform_light_pos = glGetUniformLocation(program, "light_pos");
 
+  //
+  struct mesh plane_mesh;
+
+  plane_mesh.vtx = make_buffer(GL_ARRAY_BUFFER, plane_vertices, (sizeof (plane_vertices)));
+  plane_mesh.idx = make_buffer(GL_ELEMENT_ARRAY_BUFFER, plane_Plane_triangles, (sizeof (plane_Plane_triangles)));
+  plane_mesh.length = plane_Plane_triangles_length;
+
+  uint font_program = compile_shader(src_shader_font_vp_glsl_start,
+                                     src_shader_font_vp_glsl_size,
+                                     src_shader_font_fp_glsl_start,
+                                     src_shader_font_fp_glsl_size);
+  glUseProgram(font_program);
+  uint font__attrib_position = glGetAttribLocation(font_program, "position");
+  uint font__attrib_texture = glGetAttribLocation(font_program, "_texture");
+  uint font__attrib_normal = glGetAttribLocation(font_program, "normal");
+  uint font__uniform_trans = glGetUniformLocation(font_program, "trans");
+  uint font__uniform_texture0 = glGetUniformLocation(font_program, "texture0");
+
+  //////////////////////////////////////////////////////////////////////
+  // textures
+  //////////////////////////////////////////////////////////////////////
+
+  uint terminus_font = make_texture(src_font_ter_u32n_data_start,
+                                    GL_RED,
+                                    256,
+                                    256,
+                                    GL_RED);
+
   //////////////////////////////////////////////////////////////////////
   // main loop
   //////////////////////////////////////////////////////////////////////
@@ -142,7 +177,6 @@ int main()
 
     glEnable(GL_DEPTH_TEST);
     glClearDepth(-1000.0f);
-    glDepthFunc(GL_GREATER);
     glClearColor(0.1, 0.2, 0.3, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -164,7 +198,8 @@ int main()
 
         float left = axes[2] * 0.5 + 0.5;
         float right = axes[5] * 0.5 + 0.5;
-        paddle_dx = right - left;
+        float sensitivity = 0.4f;
+        paddle_dx = (right - left) * sensitivity;
 
         //state.ball_dx = deadzone(axes[0]);
         //state.ball_dy = deadzone(axes[1]);
@@ -173,12 +208,13 @@ int main()
     }
 
     float extent = 0.25;
-    state.paddle_x += paddle_dx * 0.4;
+    state.paddle_x += paddle_dx;
     if (state.paddle_x < extent)
       state.paddle_x = extent;
     if (state.paddle_x > 12 - extent)
       state.paddle_x = 12 - extent;
-    //state.paddle_y += paddle_dy * 0.4;
+
+    update(&state);
 
     if ((state.ball_x + state.ball_dx * 0.4) > 12.25f) {
       state.ball_x = 12.25f;
@@ -186,8 +222,6 @@ int main()
     } else if ((state.ball_x + state.ball_dx * 0.4) < -0.25f) {
       state.ball_x = -0.25f;
       state.ball_dx = -state.ball_dx;
-    } else {
-      state.ball_x += state.ball_dx * 0.4;
     }
 
     if ((state.ball_y + state.ball_dy * 0.4) > 27.0f) {
@@ -196,9 +230,10 @@ int main()
     } else if ((state.ball_y + state.ball_dy * 0.4) < 0.0f) {
       state.ball_y = 0.0f;
       state.ball_dy = -state.ball_dy;
-    } else {
-      state.ball_y += state.ball_dy * 0.4;
     }
+
+    glDepthFunc(GL_GREATER);
+    glUseProgram(program);
 
     render(paddle_mesh,
            block_mesh,
@@ -211,6 +246,17 @@ int main()
            uniform_base_color,
            uniform_light_pos,
            &state);
+
+    glDepthFunc(GL_ALWAYS);
+    glUseProgram(font_program);
+
+    render_font(plane_mesh,
+                font__attrib_position,
+                font__attrib_texture,
+                font__attrib_normal,
+                font__uniform_trans,
+                font__uniform_texture0
+                );
 
     glfwSwapBuffers(window);
     glfwPollEvents();

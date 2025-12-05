@@ -139,8 +139,8 @@ void render(mesh paddle_mesh,
   for (int y = 0; y < 28; y++) {
     for (int x = 0; x < 13; x++) {
       char tile = level[y * 13 + x];
-      //if (tile == 0)
-      //continue;
+      if (tile == 0)
+        continue;
 
       const float cs = 1.0f / 255.0f;
       vec3 base_color = vec3(((float)pal[tile * 3 + 0]) * cs,
@@ -151,15 +151,6 @@ void render(mesh paddle_mesh,
       mat4x4 t = translate(vec3(x * 4.0f, -y * 2.0f, 0.0f));
 
       mat4x4 trans = a * t * rx;
-
-      vec4 res = collision(t * rx,
-                           vec3(state->ball_x * 4.0f, -state->ball_y * 2.0f,  0),
-                           vec3(0, 0, 0));
-      bool collision = res.w == 1.0f;
-      if (collision) {
-        //vec3 normal = vec3(res.x, res.y, res.z);
-        base_color = vec3(1, 0, 0);
-      }
 
       //mat3x3 normal_trans = transpose(inverse(submatrix(trans, 0, 0)));
       mat3x3 normal_trans = submatrix(rx, 3, 3);
@@ -172,7 +163,6 @@ void render(mesh paddle_mesh,
       glDrawElements(GL_TRIANGLES, block_mesh.length, GL_UNSIGNED_INT, 0);
     }
   }
-
 
   //////////////////////////////////////////////////////////////////////
   // render paddle
@@ -274,4 +264,49 @@ void render(mesh paddle_mesh,
 
     glDrawElements(GL_TRIANGLES, paddle_mesh.length, GL_UNSIGNED_INT, 0);
   }
+}
+
+void render_font(struct mesh plane_mesh,
+                 uint attrib_position,
+                 uint attrib_texture,
+                 uint attrib_normal,
+                 uint uniform_trans,
+                 uint uniform_texture0)
+{
+  glBindBuffer(GL_ARRAY_BUFFER, plane_mesh.vtx);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, plane_mesh.idx);
+
+  glVertexAttribPointer(attrib_position,
+                        3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        (sizeof (float)) * 8,
+                        (void*)(0 * 4)
+                        );
+  glVertexAttribPointer(attrib_texture,
+                        2,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        (sizeof (float)) * 8,
+                        (void*)(3 * 4)
+                        );
+  glVertexAttribPointer(attrib_normal,
+                        3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        (sizeof (float)) * 8,
+                        (void*)(5 * 4)
+                        );
+  glEnableVertexAttribArray(attrib_position);
+  glEnableVertexAttribArray(attrib_texture);
+  glEnableVertexAttribArray(attrib_normal);
+
+  mat4x4 r = rotate_y(PI / 1.0f) * rotate_z(PI / 1.0f) * rotate_x(PI / 2.0f);
+
+  mat4x4 trans = scale(0.5f) * r;
+
+  glUniform4fv(uniform_trans, 4, &trans[0][0]);
+  glUniform1i(uniform_texture0, 0);
+
+  glDrawElements(GL_TRIANGLES, plane_mesh.length, GL_UNSIGNED_INT, 0);
 }

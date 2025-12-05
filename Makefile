@@ -73,19 +73,19 @@ endef
 %.glsl.o: %.glsl
 	$(BUILD_BINARY_O)
 
-include/shader/%.glsl.h: src/shader/%.glsl
+include/%.glsl.h: src/%.glsl
 	$(BUILD_BINARY_H)
 
 %.data.o: %.data
 	$(BUILD_BINARY_O)
 
-include/level/%.data.h: src/level/%.data
+include/%.data.h: src/%.data
 	$(BUILD_BINARY_H)
 
 %.data.pal.o: %.data.pal
 	$(BUILD_BINARY_O)
 
-include/level/%.data.pal.h: src/level/%.data.pal
+include/%.data.pal.h: src/%.data.pal
 	$(BUILD_BINARY_H)
 
 clean:
@@ -104,8 +104,10 @@ MAIN_OBJS = \
 	src/opengl.o \
 	src/render.o \
 	src/collision.o \
+	src/update.o \
 	$(patsubst %.glsl,%.glsl.o,$(wildcard src/shader/*.glsl)) \
 	$(patsubst %.data,%.data.o,$(wildcard src/level/*.data)) \
+	$(patsubst %.data,%.data.o,$(wildcard src/font/*.data)) \
 	$(patsubst %.data.pal,%.data.pal.o,$(wildcard src/level/*.data.pal)) \
 	$(GLFW)
 

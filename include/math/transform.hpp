@@ -149,7 +149,7 @@ template <typename T>
 inline constexpr T inverse_length(vec<3, T> v)
 {
   float f = dot(v, v);
-  return 1.0f / sqrt(f);
+  return 1.0f / sqrt<T>(f);
 }
 
 template <typename T>

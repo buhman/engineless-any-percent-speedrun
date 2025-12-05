@@ -26,6 +26,13 @@ extern "C" {
               uint uniform_light_pos,
               struct game_state * state);
 
+  void render_font(struct mesh plane_mesh,
+                   uint attrib_position,
+                   uint attrib_texture,
+                   uint attrib_normal,
+                   uint uniform_trans,
+                   uint uniform_texture0);
+
 #ifdef __cplusplus
 }
 #endif
