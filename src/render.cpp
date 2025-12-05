@@ -74,8 +74,25 @@ static inline float py(float y)
   levels are 13x28
  */
 
-void render(mesh paddle_mesh,
-            mesh block_mesh,
+static inline mat4x4 aspect_mat()
+{
+  float aspect = (float)vp_height / (float)vp_width;
+  mat4x4 p = perspective(-1, 1, 0, 1);
+  mat4x4 tt = translate(vec3(-1.2f, 1.4f, 2.0f));
+  mat4x4 a = scale(vec3(aspect, 1.0f, 1.0f)) * p * tt * scale(0.05f);
+  return a;
+}
+
+static float light_pos_theta = 0;
+
+static inline vec3 _light_pos()
+{
+  vec3 p = vec3(1, 1, 1);
+  vec3 pos = normalize(rotate_z(light_pos_theta) * p);
+  return pos;
+}
+
+void render(mesh block_mesh,
             mesh ball_mesh,
             uint attrib_position,
             uint attrib_texture,
@@ -86,15 +103,7 @@ void render(mesh paddle_mesh,
             uint uniform_light_pos,
             struct game_state * state)
 {
-  static float theta = 0;
-
-  float aspect = (float)vp_height / (float)vp_width;
-
-  mat4x4 p = perspective(-1, 1, 0, 1);
-  mat4x4 tt = translate(vec3(-1.2f, 1.4f, 2.0f));
-  mat4x4 a = scale(vec3(aspect, 1.0f, 1.0f)) * p * tt * scale(0.05f);// * rotate_x(PI / 4.0f);
-
-  theta += 0.01;
+  light_pos_theta += 0.01;
 
   //////////////////////////////////////////////////////////////////////
   // render blocks
@@ -128,7 +137,8 @@ void render(mesh paddle_mesh,
   glEnableVertexAttribArray(attrib_texture);
   glEnableVertexAttribArray(attrib_normal);
 
-  vec3 light_pos = normalize(rotate_z(theta) * vec3(1, 1, 1));
+  mat4x4 a = aspect_mat();
+  vec3 light_pos = _light_pos();
 
   for (int y = 0; y < 28; y++) {
     for (int x = 0; x < 13; x++) {
@@ -171,57 +181,6 @@ void render(mesh paddle_mesh,
   }
 
   //////////////////////////////////////////////////////////////////////
-  // render paddle
-  //////////////////////////////////////////////////////////////////////
-
-  {
-    mat4x4 rx = rotate_y(PI / 2.0f);
-    mat4x4 ry = rotate_x((float)state->time);
-
-    mat4x4 t = translate(vec3(state->paddle_x * 4.0f, -state->paddle_y * 2.0f, 0.0));
-
-    mat4x4 trans = a * t * ry * rx;
-    mat3x3 normal_trans = submatrix(ry * rx, 3, 3);
-    vec4 base_color = vec4(0.5f, 0.5f, 0.5f, 1.0f);
-    //vec3 light_pos = vec3(-1, -1, 1);
-
-    glBindBuffer(GL_ARRAY_BUFFER, paddle_mesh.vtx);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, paddle_mesh.idx);
-
-    glVertexAttribPointer(attrib_position,
-                          3,
-                          GL_FLOAT,
-                          GL_FALSE,
-                          (sizeof (float)) * 8,
-                          (void*)(0 * 4)
-                          );
-    glVertexAttribPointer(attrib_texture,
-                          2,
-                          GL_FLOAT,
-                          GL_FALSE,
-                          (sizeof (float)) * 8,
-                          (void*)(3 * 4)
-                          );
-    glVertexAttribPointer(attrib_normal,
-                          3,
-                          GL_FLOAT,
-                          GL_FALSE,
-                          (sizeof (float)) * 8,
-                          (void*)(5 * 4)
-                          );
-    glEnableVertexAttribArray(attrib_position);
-    glEnableVertexAttribArray(attrib_texture);
-    glEnableVertexAttribArray(attrib_normal);
-
-    glUniform4fv(uniform_trans, 4, &trans[0][0]);
-    glUniform3fv(uniform_normal_trans, 3, &normal_trans[0][0]);
-    glUniform4fv(uniform_base_color, 1, &base_color[0]);
-    glUniform3fv(uniform_light_pos, 1, &light_pos[0]);
-
-    glDrawElements(GL_TRIANGLES, paddle_mesh.length, GL_UNSIGNED_INT, 0);
-  }
-
-  //////////////////////////////////////////////////////////////////////
   // render balls
   //////////////////////////////////////////////////////////////////////
 
@@ -235,12 +194,10 @@ void render(mesh paddle_mesh,
 
     mat4x4 trans = a * t * ry * rx;
     mat3x3 normal_trans = submatrix(ry * rx, 3, 3);
-    //vec4 base_color = vec4(0.5f, 0.5f, 0.5f, 1.0f);
     float hue = state->time - ball.launch_time;
     hue = hue - floorf(hue);
     vec3 c = hsv_to_rgb(hue, 1.0f, 1.0f);
     vec4 base_color = vec4(c.x, c.y, c.z, 1.0f);
-    //vec3 light_pos = vec3(-1, -1, 1);
 
     glBindBuffer(GL_ARRAY_BUFFER, ball_mesh.vtx);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ball_mesh.idx);
@@ -275,7 +232,7 @@ void render(mesh paddle_mesh,
     glUniform4fv(uniform_base_color, 1, &base_color[0]);
     glUniform3fv(uniform_light_pos, 1, &light_pos[0]);
 
-    glDrawElements(GL_TRIANGLES, paddle_mesh.length, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, ball_mesh.length, GL_UNSIGNED_INT, 0);
   }
 }
 
@@ -390,4 +347,66 @@ void render_background(struct mesh plane_mesh,
   glUniform2fv(uniform_resolution, 1, &resolution[0]);
 
   glDrawElements(GL_TRIANGLES, plane_mesh.length, GL_UNSIGNED_INT, 0);
+}
+
+
+
+//////////////////////////////////////////////////////////////////////
+// render paddle
+//////////////////////////////////////////////////////////////////////
+
+void render_paddle(mesh paddle_mesh,
+                   uint attrib_position,
+                   uint attrib_texture,
+                   uint attrib_normal,
+                   uint uniform_trans,
+                   uint uniform_normal_trans,
+                   uint uniform_light_pos,
+                   uint uniform_time,
+                   struct game_state * state)
+{
+  mat4x4 rx = rotate_y(PI / 2.0f);
+  mat4x4 ry = rotate_x((float)state->time);
+
+  mat4x4 t = translate(vec3(state->paddle_x * 4.0f, -state->paddle_y * 2.0f, 0.0));
+  mat4x4 a = aspect_mat();
+
+  mat4x4 trans = a * t * ry * rx;
+  mat3x3 normal_trans = submatrix(ry * rx, 3, 3);
+  vec3 light_pos = _light_pos();
+
+  glBindBuffer(GL_ARRAY_BUFFER, paddle_mesh.vtx);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, paddle_mesh.idx);
+
+  glVertexAttribPointer(attrib_position,
+                        3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        (sizeof (float)) * 8,
+                        (void*)(0 * 4)
+                        );
+  glVertexAttribPointer(attrib_texture,
+                        2,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        (sizeof (float)) * 8,
+                        (void*)(3 * 4)
+                        );
+  glVertexAttribPointer(attrib_normal,
+                        3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        (sizeof (float)) * 8,
+                        (void*)(5 * 4)
+                        );
+  glEnableVertexAttribArray(attrib_position);
+  glEnableVertexAttribArray(attrib_texture);
+  glEnableVertexAttribArray(attrib_normal);
+
+  glUniform4fv(uniform_trans, 4, &trans[0][0]);
+  glUniform3fv(uniform_normal_trans, 3, &normal_trans[0][0]);
+  glUniform3fv(uniform_light_pos, 1, &light_pos[0]);
+  glUniform1f(uniform_time, state->time);
+
+  glDrawElements(GL_TRIANGLES, paddle_mesh.length, GL_UNSIGNED_INT, 0);
 }

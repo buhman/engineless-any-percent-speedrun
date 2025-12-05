@@ -17,5 +17,5 @@ void main()
   float d = length(uv);
   float td = time * 0.5 + d;
 
-  gl_FragColor = vec4(palette(td) * 0.2, 1);
+  gl_FragColor = vec4(palette(td) * 0.1, 1);
 }

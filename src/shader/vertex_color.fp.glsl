@@ -4,8 +4,8 @@ uniform vec4 base_color;
 uniform vec3 light_pos;
 
 varying vec3 fp_position;
-varying vec3 fp_normal;
 varying vec2 fp_texture;
+varying vec3 fp_normal;
 
 void main()
 {

@@ -14,8 +14,7 @@ extern "C" {
     uint length;
   };
 
-  void render(struct mesh paddle_mesh,
-              struct mesh brick_mesh,
+  void render(struct mesh brick_mesh,
               struct mesh ball_mesh,
               uint attrib_position,
               uint attrib_texture,
@@ -40,6 +39,16 @@ extern "C" {
                          uint uniform_trans,
                          uint uniform_time,
                          struct game_state * state);
+
+  void render_paddle(struct mesh paddle_mesh,
+                     uint attrib_position,
+                     uint attrib_texture,
+                     uint attrib_normal,
+                     uint uniform_trans,
+                     uint uniform_normal_trans,
+                     uint uniform_light_pos,
+                     uint uniform_time,
+                     struct game_state * state);
 
 #ifdef __cplusplus
 }

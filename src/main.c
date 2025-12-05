@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <math.h>
+#include <assert.h>
 
 #include "glad/glad.h"
 
@@ -12,6 +13,7 @@
 #include "shader/font.vp.glsl.h"
 #include "shader/background.fp.glsl.h"
 #include "shader/background.vp.glsl.h"
+#include "shader/paddle.fp.glsl.h"
 
 #include "font/ter_u32n.data.h"
 
@@ -145,6 +147,7 @@ int main()
   uint uniform_normal_trans = glGetUniformLocation(program, "normal_trans");
   uint uniform_base_color = glGetUniformLocation(program, "base_color");
   uint uniform_light_pos = glGetUniformLocation(program, "light_pos");
+  printf("attrib_t %d\n", attrib_texture);
 
   // font
 
@@ -157,6 +160,7 @@ int main()
   uint font__uniform_trans = glGetUniformLocation(font_program, "trans");
   uint font__uniform_texture_trans = glGetUniformLocation(font_program, "texture_trans");
   uint font__uniform_texture0 = glGetUniformLocation(font_program, "texture0");
+  printf("attrib_t %d\n", font__attrib_texture);
 
   // background
 
@@ -168,6 +172,20 @@ int main()
   uint bg__uniform_resolution = glGetUniformLocation(bg_program, "resolution");
   uint bg__uniform_trans = glGetUniformLocation(bg_program, "trans");
   uint bg__uniform_time = glGetUniformLocation(bg_program, "time");
+
+  // paddle
+
+  uint paddle_program = compile_shader(src_shader_vertex_color_vp_glsl_start,
+                                       src_shader_vertex_color_vp_glsl_size,
+                                       src_shader_paddle_fp_glsl_start,
+                                       src_shader_paddle_fp_glsl_size);
+  uint paddle__attrib_position = glGetAttribLocation(paddle_program, "position");
+  uint paddle__attrib_texture = glGetAttribLocation(paddle_program, "_texture");
+  uint paddle__attrib_normal = glGetAttribLocation(paddle_program, "normal");
+  uint paddle__uniform_trans = glGetUniformLocation(paddle_program, "trans");
+  uint paddle__uniform_normal_trans = glGetUniformLocation(paddle_program, "normal_trans");
+  uint paddle__uniform_light_pos = glGetUniformLocation(paddle_program, "light_pos");
+  uint paddle__uniform_time = glGetUniformLocation(paddle_program, "time");
 
   //////////////////////////////////////////////////////////////////////
   // textures
@@ -283,9 +301,7 @@ int main()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthFunc(GL_GREATER);
     glUseProgram(program);
-
-    render(paddle_mesh,
-           block_mesh,
+    render(block_mesh,
            ball_mesh,
            attrib_position,
            attrib_texture,
@@ -297,9 +313,21 @@ int main()
            &state);
 
     glDisable(GL_BLEND);
+    glDepthFunc(GL_GREATER);
+    glUseProgram(paddle_program);
+    render_paddle(paddle_mesh,
+                  paddle__attrib_position,
+                  paddle__attrib_texture,
+                  paddle__attrib_normal,
+                  paddle__uniform_trans,
+                  paddle__uniform_normal_trans,
+                  paddle__uniform_light_pos,
+                  paddle__uniform_time,
+                  &state);
+
+    glDisable(GL_BLEND);
     glDepthFunc(GL_ALWAYS);
     glUseProgram(font_program);
-
     render_font(plane_mesh,
                 font__attrib_position,
                 font__attrib_texture,
