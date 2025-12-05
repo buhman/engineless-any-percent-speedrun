@@ -2,7 +2,6 @@
 
 attribute vec3 position;
 attribute vec2 _texture;
-attribute vec3 normal;
 
 varying vec2 fp_texture;
 varying vec2 fp_texture_trans;

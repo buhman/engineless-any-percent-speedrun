@@ -8,9 +8,10 @@
 
 #include "shader/vertex_color.fp.glsl.h"
 #include "shader/vertex_color.vp.glsl.h"
-
 #include "shader/font.fp.glsl.h"
 #include "shader/font.vp.glsl.h"
+#include "shader/background.fp.glsl.h"
+#include "shader/background.vp.glsl.h"
 
 #include "font/ter_u32n.data.h"
 
@@ -24,8 +25,8 @@
 //#include "model/cube.h"
 #include "model/plane.h"
 
-int vp_width = 1600;
-int vp_height = 1200;
+int vp_width = 800;
+int vp_height = 600;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -100,24 +101,20 @@ int main()
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
   //////////////////////////////////////////////////////////////////////
-  // buffer initialization
+  // mesh initialization
   //////////////////////////////////////////////////////////////////////
-
-  /*
-  uint triangle_vertex_buffer = make_buffer(GL_ARRAY_BUFFER,
-                                            triangle_vertex_buffer_data,
-                                            (sizeof (triangle_vertex_buffer_data)));
-  */
 
   struct mesh paddle_mesh;
   struct mesh block_mesh;
   struct mesh ball_mesh;
+  struct mesh plane_mesh;
   block_mesh.vtx = make_buffer(GL_ARRAY_BUFFER, block_vertices, (sizeof (block_vertices)));
   block_mesh.idx = make_buffer(GL_ELEMENT_ARRAY_BUFFER, block_Cube_triangles, (sizeof (block_Cube_triangles)));
   block_mesh.length = block_Cube_triangles_length;
-  //block_mesh.vtx = make_buffer(GL_ARRAY_BUFFER, cube_vertices, (sizeof (cube_vertices)));
-  //block_mesh.idx = make_buffer(GL_ELEMENT_ARRAY_BUFFER, cube_Cube_triangles, (sizeof (cube_Cube_triangles)));
-  //block_mesh.length = cube_Cube_triangles_length;
+
+  //cube_mesh.vtx = make_buffer(GL_ARRAY_BUFFER, cube_vertices, (sizeof (cube_vertices)));
+  //cube_mesh.idx = make_buffer(GL_ELEMENT_ARRAY_BUFFER, cube_Cube_triangles, (sizeof (cube_Cube_triangles)));
+  //cube_mesh.length = cube_Cube_triangles_length;
 
   paddle_mesh.vtx = make_buffer(GL_ARRAY_BUFFER, paddle_vertices, (sizeof (paddle_vertices)));
   paddle_mesh.idx = make_buffer(GL_ELEMENT_ARRAY_BUFFER, paddle_Cylinder_triangles, (sizeof (paddle_Cylinder_triangles)));
@@ -127,11 +124,20 @@ int main()
   ball_mesh.idx = make_buffer(GL_ELEMENT_ARRAY_BUFFER, ball_Icosphere_triangles, (sizeof (ball_Icosphere_triangles)));
   ball_mesh.length = ball_Icosphere_triangles_length;
 
+  plane_mesh.vtx = make_buffer(GL_ARRAY_BUFFER, plane_vertices, (sizeof (plane_vertices)));
+  plane_mesh.idx = make_buffer(GL_ELEMENT_ARRAY_BUFFER, plane_Plane_triangles, (sizeof (plane_Plane_triangles)));
+  plane_mesh.length = plane_Plane_triangles_length;
+
+  //////////////////////////////////////////////////////////////////////
+  // shaders
+  //////////////////////////////////////////////////////////////////////
+
+  //
+
   uint program = compile_shader(src_shader_vertex_color_vp_glsl_start,
                                 src_shader_vertex_color_vp_glsl_size,
                                 src_shader_vertex_color_fp_glsl_start,
                                 src_shader_vertex_color_fp_glsl_size);
-  glUseProgram(program);
   uint attrib_position = glGetAttribLocation(program, "position");
   uint attrib_texture = glGetAttribLocation(program, "_texture");
   uint attrib_normal = glGetAttribLocation(program, "normal");
@@ -140,24 +146,28 @@ int main()
   uint uniform_base_color = glGetUniformLocation(program, "base_color");
   uint uniform_light_pos = glGetUniformLocation(program, "light_pos");
 
-  //
-  struct mesh plane_mesh;
-
-  plane_mesh.vtx = make_buffer(GL_ARRAY_BUFFER, plane_vertices, (sizeof (plane_vertices)));
-  plane_mesh.idx = make_buffer(GL_ELEMENT_ARRAY_BUFFER, plane_Plane_triangles, (sizeof (plane_Plane_triangles)));
-  plane_mesh.length = plane_Plane_triangles_length;
+  // font
 
   uint font_program = compile_shader(src_shader_font_vp_glsl_start,
                                      src_shader_font_vp_glsl_size,
                                      src_shader_font_fp_glsl_start,
                                      src_shader_font_fp_glsl_size);
-  glUseProgram(font_program);
   uint font__attrib_position = glGetAttribLocation(font_program, "position");
   uint font__attrib_texture = glGetAttribLocation(font_program, "_texture");
-  uint font__attrib_normal = glGetAttribLocation(font_program, "normal");
   uint font__uniform_trans = glGetUniformLocation(font_program, "trans");
   uint font__uniform_texture_trans = glGetUniformLocation(font_program, "texture_trans");
   uint font__uniform_texture0 = glGetUniformLocation(font_program, "texture0");
+
+  // background
+
+  uint bg_program = compile_shader(src_shader_background_vp_glsl_start,
+                                   src_shader_background_vp_glsl_size,
+                                   src_shader_background_fp_glsl_start,
+                                   src_shader_background_fp_glsl_size);
+  uint bg__attrib_position = glGetAttribLocation(bg_program, "position");
+  uint bg__uniform_resolution = glGetUniformLocation(bg_program, "resolution");
+  uint bg__uniform_trans = glGetUniformLocation(bg_program, "trans");
+  uint bg__uniform_time = glGetUniformLocation(bg_program, "time");
 
   //////////////////////////////////////////////////////////////////////
   // textures
@@ -228,7 +238,7 @@ int main()
 
         const char * name = glfwGetJoystickName(GLFW_JOYSTICK_1 + i);
         if (name != last_gamepad_name) {
-          printf("active gamepad: `%s`; axes: %d\n", name, count);
+          printf("active gamepad: `%s`; axes: 6 ; buttons: %d\n", name, count);
           last_gamepad_name = name;
         }
 
@@ -259,6 +269,16 @@ int main()
 
     update(&state, time);
 
+    glDisable(GL_BLEND);
+    glDepthFunc(GL_ALWAYS);
+    glUseProgram(bg_program);
+    render_background(plane_mesh,
+                      bg__attrib_position,
+                      bg__uniform_resolution,
+                      bg__uniform_trans,
+                      bg__uniform_time,
+                      &state);
+
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthFunc(GL_GREATER);
@@ -283,7 +303,6 @@ int main()
     render_font(plane_mesh,
                 font__attrib_position,
                 font__attrib_texture,
-                font__attrib_normal,
                 font__uniform_trans,
                 font__uniform_texture_trans,
                 font__uniform_texture0,

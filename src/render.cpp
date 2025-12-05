@@ -176,11 +176,12 @@ void render(mesh paddle_mesh,
 
   {
     mat4x4 rx = rotate_y(PI / 2.0f);
+    mat4x4 ry = rotate_x((float)state->time);
 
     mat4x4 t = translate(vec3(state->paddle_x * 4.0f, -state->paddle_y * 2.0f, 0.0));
 
-    mat4x4 trans = a * t * rx;
-    mat3x3 normal_trans = submatrix(rx, 3, 3);
+    mat4x4 trans = a * t * ry * rx;
+    mat3x3 normal_trans = submatrix(ry * rx, 3, 3);
     vec4 base_color = vec4(0.5f, 0.5f, 0.5f, 1.0f);
     //vec3 light_pos = vec3(-1, -1, 1);
 
@@ -227,12 +228,13 @@ void render(mesh paddle_mesh,
   for (int i = 0; i < state->balls_launched; i++) {
     struct ball_state& ball = state->balls[i];
 
-    mat4x4 rx = rotate_y(PI / 2.0f);
+    mat4x4 rx = rotate_x((float)state->time);
+    mat4x4 ry = rotate_y((float)state->time * 0.5f);
     vec3 ball_position = vec3(ball.ball_x * 4.0f, -ball.ball_y * 2.0f, 0.0);
     mat4x4 t = translate(ball_position);
 
-    mat4x4 trans = a * t * rx;
-    mat3x3 normal_trans = submatrix(rx, 3, 3);
+    mat4x4 trans = a * t * ry * rx;
+    mat3x3 normal_trans = submatrix(ry * rx, 3, 3);
     //vec4 base_color = vec4(0.5f, 0.5f, 0.5f, 1.0f);
     float hue = state->time - ball.launch_time;
     hue = hue - floorf(hue);
@@ -309,7 +311,6 @@ static inline int max(int a, int b)
 void render_font(struct mesh plane_mesh,
                  uint attrib_position,
                  uint attrib_texture,
-                 uint attrib_normal,
                  uint uniform_trans,
                  uint uniform_texture_trans,
                  uint uniform_texture0,
@@ -332,16 +333,8 @@ void render_font(struct mesh plane_mesh,
                         (sizeof (float)) * 8,
                         (void*)(3 * 4)
                         );
-  glVertexAttribPointer(attrib_normal,
-                        3,
-                        GL_FLOAT,
-                        GL_FALSE,
-                        (sizeof (float)) * 8,
-                        (void*)(5 * 4)
-                        );
   glEnableVertexAttribArray(attrib_position);
   glEnableVertexAttribArray(attrib_texture);
-  glEnableVertexAttribArray(attrib_normal);
 
   float aspect = (float)vp_height / (float)vp_width;
 
@@ -368,4 +361,33 @@ void render_font(struct mesh plane_mesh,
     }
     advance += grid_width;
   }
+}
+
+void render_background(struct mesh plane_mesh,
+                       uint attrib_position,
+                       uint uniform_resolution,
+                       uint uniform_trans,
+                       uint uniform_time,
+                       struct game_state * state)
+{
+  glBindBuffer(GL_ARRAY_BUFFER, plane_mesh.vtx);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, plane_mesh.idx);
+
+  glVertexAttribPointer(attrib_position,
+                        3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        (sizeof (float)) * 8,
+                        (void*)(0 * 4)
+                        );
+  glEnableVertexAttribArray(attrib_position);
+
+  mat4x4 r = rotate_y(PI / 1.0f) * rotate_z(PI / 1.0f) * rotate_x(PI / 2.0f);
+  mat4x4 trans = r;
+  glUniform4fv(uniform_trans, 4, &trans[0][0]);
+  glUniform1f(uniform_time, state->time);
+  vec2 resolution = vec2(vp_width, vp_height);
+  glUniform2fv(uniform_resolution, 1, &resolution[0]);
+
+  glDrawElements(GL_TRIANGLES, plane_mesh.length, GL_UNSIGNED_INT, 0);
 }
