@@ -12,6 +12,9 @@ extern "C" {
     float ball_y;
     float ball_dx;
     float ball_dy;
+
+    double start_time;
+    double remaining;
   };
 
 #ifdef __cplusplus

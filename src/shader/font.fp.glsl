@@ -8,6 +8,9 @@ void main()
 {
   vec4 c = texture2D(texture0, fp_texture);
 
+  if (c.x == 0)
+    discard;
+
   float i = c.x == 0 ? 0.0 : 1.0;
 
   gl_FragColor = vec4(i, i, i, 1.0);

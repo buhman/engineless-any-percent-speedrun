@@ -4,6 +4,7 @@
 
 #include "glad/glad.h"
 
+#include "unparse.h"
 #include "collision.hpp"
 #include "render.hpp"
 #include "math/float_types.hpp"
@@ -266,12 +267,43 @@ void render(mesh paddle_mesh,
   }
 }
 
+const int grid_width = 16;
+const int grid_height = 32;
+const int grid_stride = 256 / grid_width;
+const int first_character = 0x20;
+const float grid_scale = 1.0f / 256.0f;
+
+static inline mat4x4 char_tex_trans(char c)
+{
+  int cc = c - first_character;
+  int x = cc % grid_stride;
+  int y = cc / grid_stride;
+
+  mat4x4 tex_t = translate(vec3((float)(x * grid_width) * grid_scale,
+                                (float)(y * grid_height) * grid_scale,
+                                0));
+  mat4x4 tex_s = scale(vec3(grid_width * grid_scale, grid_height * grid_scale, 1.0f));
+  mat4x4 texture_trans = tex_t * tex_s;
+
+  return texture_trans;
+}
+
+static inline int max(int a, int b)
+{
+  if (a > b)
+    return a;
+  else
+    return b;
+}
+
 void render_font(struct mesh plane_mesh,
                  uint attrib_position,
                  uint attrib_texture,
                  uint attrib_normal,
                  uint uniform_trans,
-                 uint uniform_texture0)
+                 uint uniform_texture_trans,
+                 uint uniform_texture0,
+                 struct game_state * state)
 {
   glBindBuffer(GL_ARRAY_BUFFER, plane_mesh.vtx);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, plane_mesh.idx);
@@ -301,12 +333,29 @@ void render_font(struct mesh plane_mesh,
   glEnableVertexAttribArray(attrib_texture);
   glEnableVertexAttribArray(attrib_normal);
 
+  float aspect = (float)vp_height / (float)vp_width;
+
+  mat4x4 a = scale(vec3(aspect, 1.0f, 1.0f));
+  mat4x4 s = scale(vec3(1, 2, 1));
   mat4x4 r = rotate_y(PI / 1.0f) * rotate_z(PI / 1.0f) * rotate_x(PI / 2.0f);
 
-  mat4x4 trans = scale(0.5f) * r;
-
-  glUniform4fv(uniform_trans, 4, &trans[0][0]);
   glUniform1i(uniform_texture0, 0);
 
-  glDrawElements(GL_TRIANGLES, plane_mesh.length, GL_UNSIGNED_INT, 0);
+  char dst[64];
+  int len = unparse_double(state->remaining, 4, 3, dst);
+
+  int advance = 0;
+  for (int i = 0; i < len; i++) {
+    if (dst[i] != ' ') {
+      mat4x4 texture_trans = char_tex_trans(dst[i]);
+
+      mat4x4 char_t = translate(vec3(advance / 8.0f, -8.0f * aspect, 0));
+      mat4x4 trans = a * scale(32.0f / vp_height) * s * char_t * r;
+
+      glUniform4fv(uniform_trans, 4, &trans[0][0]);
+      glUniform4fv(uniform_texture_trans, 4, &texture_trans[0][0]);
+      glDrawElements(GL_TRIANGLES, plane_mesh.length, GL_UNSIGNED_INT, 0);
+    }
+    advance += grid_width;
+  }
 }

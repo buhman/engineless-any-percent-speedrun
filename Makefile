@@ -105,6 +105,7 @@ MAIN_OBJS = \
 	src/render.o \
 	src/collision.o \
 	src/update.o \
+	src/unparse.o \
 	$(patsubst %.glsl,%.glsl.o,$(wildcard src/shader/*.glsl)) \
 	$(patsubst %.data,%.data.o,$(wildcard src/level/*.data)) \
 	$(patsubst %.data,%.data.o,$(wildcard src/font/*.data)) \

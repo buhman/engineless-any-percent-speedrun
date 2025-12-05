@@ -31,7 +31,9 @@ extern "C" {
                    uint attrib_texture,
                    uint attrib_normal,
                    uint uniform_trans,
-                   uint uniform_texture0);
+                   uint uniform_texture_trans,
+                   uint uniform_texture0,
+                   struct game_state * state);
 
 #ifdef __cplusplus
 }

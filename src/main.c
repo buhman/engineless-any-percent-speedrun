@@ -139,6 +139,7 @@ int main()
   uint font__attrib_texture = glGetAttribLocation(font_program, "_texture");
   uint font__attrib_normal = glGetAttribLocation(font_program, "normal");
   uint font__uniform_trans = glGetUniformLocation(font_program, "trans");
+  uint font__uniform_texture_trans = glGetUniformLocation(font_program, "texture_trans");
   uint font__uniform_texture0 = glGetUniformLocation(font_program, "texture0");
 
   //////////////////////////////////////////////////////////////////////
@@ -150,6 +151,7 @@ int main()
                                     256,
                                     256,
                                     GL_RED);
+  (void)terminus_font;
 
   //////////////////////////////////////////////////////////////////////
   // main loop
@@ -171,11 +173,12 @@ int main()
   state.ball_dx = 0.1;
   state.ball_dy = 0.1;
 
+  state.start_time = glfwGetTime();
+
   while(!glfwWindowShouldClose(window)) {
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
       glfwSetWindowShouldClose(window, true);
 
-    glEnable(GL_DEPTH_TEST);
     glClearDepth(-1000.0f);
     glClearColor(0.1, 0.2, 0.3, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -215,6 +218,8 @@ int main()
       state.paddle_x = 12 - extent;
 
     update(&state);
+    double time = glfwGetTime();
+    state.remaining = 20.0 - (time - state.start_time);
 
     if ((state.ball_x + state.ball_dx * 0.4) > 12.25f) {
       state.ball_x = 12.25f;
@@ -232,6 +237,7 @@ int main()
       state.ball_dy = -state.ball_dy;
     }
 
+    glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_GREATER);
     glUseProgram(program);
 
@@ -247,6 +253,7 @@ int main()
            uniform_light_pos,
            &state);
 
+    glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_ALWAYS);
     glUseProgram(font_program);
 
@@ -255,8 +262,9 @@ int main()
                 font__attrib_texture,
                 font__attrib_normal,
                 font__uniform_trans,
-                font__uniform_texture0
-                );
+                font__uniform_texture_trans,
+                font__uniform_texture0,
+                &state);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
