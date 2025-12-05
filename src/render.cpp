@@ -6,12 +6,10 @@
 
 #include "unparse.h"
 #include "collision.hpp"
+#include "collision2.hpp"
 #include "render.hpp"
 #include "math/float_types.hpp"
 #include "math/transform.hpp"
-
-#include "level/level1.data.h"
-#include "level/level1.data.pal.h"
 
 #define PI 3.14159274101257324219f
 
@@ -131,25 +129,27 @@ void render(mesh paddle_mesh,
   glEnableVertexAttribArray(attrib_texture);
   glEnableVertexAttribArray(attrib_normal);
 
-  assert(src_level_level1_data_size == 13 * 28);
-  const uint8_t * level = (const uint8_t *)src_level_level1_data_start;
-  const uint8_t * pal = (const uint8_t *)src_level_level1_data_pal_start;
-
   vec3 light_pos = normalize(rotate_z(theta) * vec3(1, 1, 1));
 
   for (int y = 0; y < 28; y++) {
     for (int x = 0; x < 13; x++) {
-      char tile = level[y * 13 + x];
-      if (tile == 0)
-        continue;
+      char tile = state->level[y * 13 + x];
+      //if (tile == 0)
+        //continue;
 
       const float cs = 1.0f / 255.0f;
-      vec3 base_color = vec3(((float)pal[tile * 3 + 0]) * cs,
-                             ((float)pal[tile * 3 + 1]) * cs,
-                             ((float)pal[tile * 3 + 2]) * cs);
+      vec3 base_color = vec3(((float)state->pal[tile * 3 + 0]) * cs,
+                             ((float)state->pal[tile * 3 + 1]) * cs,
+                             ((float)state->pal[tile * 3 + 2]) * cs);
+
+      vec3 block_position = vec3(x * 4.0f, -y * 2.0f, 0.0f);
+      vec3 ball_position = vec3(state->ball_x * 4.0f, -state->ball_y * 2.0f, 0.0);
+      bool collided = aabb_circle_collision(block_position, ball_position);
+      if (collided)
+        base_color = vec3(1, 0, 0);
 
       mat4x4 rx = rotate_x(-PI / 2.0f);
-      mat4x4 t = translate(vec3(x * 4.0f, -y * 2.0f, 0.0f));
+      mat4x4 t = translate(block_position);
 
       mat4x4 trans = a * t * rx;
 

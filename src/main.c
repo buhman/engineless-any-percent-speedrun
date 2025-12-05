@@ -164,15 +164,7 @@ int main()
   const char * last_gamepad_name = NULL;
 
   struct game_state state;
-  state.paddle_x = 0.0;
-  state.paddle_y = 26.0;
-
-  state.ball_x = 0.0;
-  state.ball_y = 25.0;
-
-  state.ball_dx = 0.1;
-  state.ball_dy = 0.1;
-
+  reset_level(&state);
   state.start_time = glfwGetTime();
 
   while(!glfwWindowShouldClose(window)) {
@@ -204,8 +196,8 @@ int main()
         float sensitivity = 0.4f;
         paddle_dx = (right - left) * sensitivity;
 
-        //state.ball_dx = deadzone(axes[0]);
-        //state.ball_dy = deadzone(axes[1]);
+        state.ball_dx = deadzone(axes[0]);
+        state.ball_dy = deadzone(axes[1]);
         break;
       }
     }

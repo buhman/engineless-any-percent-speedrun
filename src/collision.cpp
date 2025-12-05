@@ -260,29 +260,3 @@ vec4 collision(mat4x4 trans,
               smallest_normal.z,
               collision ? smallest : -9999.0f);
 }
-
-/*
-bool collision(float ball_x, float ball_y,
-               float ball_dx, float ball_dy)
-{
-  const uint8_t * level = (const uint8_t *)src_level_level1_data_start;
-  const uint8_t * pal = (const uint8_t *)src_level_level1_data_pal_start;
-
-  for (int y = 0; y < 28; y++) {
-    for (int x = 0; x < 13; x++) {
-      char tile = level[y * 13 + x];
-      if (tile == 0)
-        continue;
-
-        //if (   (paddle_x + 1.0) >= ((float)x - 1.0)
-          //&& (paddle_x - 1.0) <= ((float)x + 1.0)
-          //&& (paddle_y + 1.0) >= ((float)y - 1.0)
-          //&& (paddle_y - 1.0) <= ((float)y + 1.0)) {
-
-      collision_inner(translate(vec3(x, y, 0)),
-                      vec3(ball_x,  ball_y,  0),
-                      vec3(ball_dx, ball_dy, 0));
-    }
-  }
-}
-*/

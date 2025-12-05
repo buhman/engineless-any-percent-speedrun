@@ -104,6 +104,7 @@ MAIN_OBJS = \
 	src/opengl.o \
 	src/render.o \
 	src/collision.o \
+	src/collision2.o \
 	src/update.o \
 	src/unparse.o \
 	$(patsubst %.glsl,%.glsl.o,$(wildcard src/shader/*.glsl)) \

@@ -1,10 +1,20 @@
 #pragma once
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+  struct block_state {
+    float destroyed_time;
+  };
+
   struct game_state {
+    struct block_state blocks[28 * 13];
+    const uint8_t * level;
+    const uint8_t * pal;
+
     float paddle_x;
     float paddle_y;
 
