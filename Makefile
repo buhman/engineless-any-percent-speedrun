@@ -16,6 +16,8 @@ CFLAGS += -Wno-error=unused-const-variable
 CFLAGS += -Wno-error=unused-but-set-variable
 CFLAGS += -Wno-error=unused-variable
 CFLAGS += -I$(MAKEFILE_PATH)/include
+#CFLAGS += -DDEBUG_BUTTONS
+#CFLAGS += -DDEBUG_AXES
 LDFLAGS += -lm
 ifeq ($(OS),Windows_NT)
 LDFLAGS += -Wl,--subsystem,windows -mwindows

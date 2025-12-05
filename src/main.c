@@ -51,6 +51,23 @@ float deadzone(float n)
     return n;
 }
 
+#ifdef __linux__
+// Linux DS4
+#define X_BUTTON 0 // cross
+#define O_BUTTON 1 // circle
+#define T_BUTTON 2 // triangle
+#define S_BUTTON 3 // square
+#define OPTIONS_BUTTON 9
+#define LEFT_AXIS 2
+#define RIGHT_AXIS 5
+#else
+// Windows DS4
+#define X_BUTTON 1
+#define OPTIONS_BUTTON 9
+#define LEFT_AXIS 3
+#define RIGHT_AXIS 4
+#endif
+
 int main()
 {
   //////////////////////////////////////////////////////////////////////
@@ -191,14 +208,23 @@ int main()
       //printf("present, %d %d %s %d\n", i, count, name, is_gamepad);
       if (present && is_gamepad && count == 6) {
         const unsigned char * buttons = glfwGetJoystickButtons(GLFW_JOYSTICK_1 + i, &count);
-        /*
-        printf("buttons count %d\n", count);
+
+        #ifdef DEBUG_BUTTONS
+        //printf("buttons count %d\n", count);
         for (int i = 0; i < count; i++) {
           printf("[% 2d % 2d] ", i, buttons[i]);
         }
         printf("\n");
-        */
-        x_press = buttons[0] != 0;
+        #endif
+
+        #ifdef DEBUG_AXES
+        for (int i = 0; i < 6; i++) {
+          printf("[% 2d % 2.03f] ", i, axes[i]);
+        }
+        printf("\n");
+        #endif
+
+        x_press = buttons[X_BUTTON] != 0;
 
         const char * name = glfwGetJoystickName(GLFW_JOYSTICK_1 + i);
         if (name != last_gamepad_name) {
@@ -206,8 +232,8 @@ int main()
           last_gamepad_name = name;
         }
 
-        float left = axes[2] * 0.5 + 0.5;
-        float right = axes[5] * 0.5 + 0.5;
+        float left = axes[LEFT_AXIS] * 0.5 + 0.5;
+        float right = axes[RIGHT_AXIS] * 0.5 + 0.5;
         float sensitivity = 0.4f;
         paddle_dx = (right - left) * sensitivity;
 
