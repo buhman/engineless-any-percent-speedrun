@@ -49,6 +49,7 @@ void launch_ball(struct game_state * state, double time)
   ball.ball_y = 25.0f;
   ball.ball_dx = d.x;
   ball.ball_dy = -d.y;
+  ball.launch_time = time;
 
   state->balls_launched += 1;
 }
@@ -122,6 +123,8 @@ void update_ball(struct game_state * state, struct ball_state& ball, double time
     bool collided = aabb_circle_collision(paddle_position, ball_position, paddle_bounds, &cd);
     if (collided) {
       ball_collision_response(ball, cd);
+      ball.ball_y = 25.0f;
+      ball.ball_dy = -fabsf(ball.ball_dy);
     }
   }
 

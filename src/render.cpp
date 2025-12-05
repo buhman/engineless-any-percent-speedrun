@@ -5,9 +5,8 @@
 #include "glad/glad.h"
 
 #include "unparse.h"
-#include "collision.hpp"
-#include "collision2.hpp"
 #include "render.hpp"
+#include "color.hpp"
 #include "math/float_types.hpp"
 #include "math/transform.hpp"
 
@@ -234,7 +233,11 @@ void render(mesh paddle_mesh,
 
     mat4x4 trans = a * t * rx;
     mat3x3 normal_trans = submatrix(rx, 3, 3);
-    vec4 base_color = vec4(0.5f, 0.5f, 0.5f, 1.0f);
+    //vec4 base_color = vec4(0.5f, 0.5f, 0.5f, 1.0f);
+    float hue = state->time - ball.launch_time;
+    hue = hue - floorf(hue);
+    vec3 c = hsv_to_rgb(hue, 1.0f, 1.0f);
+    vec4 base_color = vec4(c.x, c.y, c.z, 1.0f);
     //vec3 light_pos = vec3(-1, -1, 1);
 
     glBindBuffer(GL_ARRAY_BUFFER, ball_mesh.vtx);

@@ -103,10 +103,10 @@ MAIN_OBJS = \
 	src/glad.o \
 	src/opengl.o \
 	src/render.o \
-	src/collision.o \
 	src/collision2.o \
 	src/update.o \
 	src/unparse.o \
+	src/color.o \
 	$(patsubst %.glsl,%.glsl.o,$(wildcard src/shader/*.glsl)) \
 	$(patsubst %.data,%.data.o,$(wildcard src/level/*.data)) \
 	$(patsubst %.data,%.data.o,$(wildcard src/font/*.data)) \
