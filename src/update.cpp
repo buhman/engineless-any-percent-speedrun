@@ -12,16 +12,43 @@
 #include "math/float_types.hpp"
 #include "math/transform.hpp"
 
-void launch_ball(struct game_state * state)
+static uint64_t xorshift_state = 0x1234567812345678;
+
+uint64_t xorshift64(uint64_t x)
+{
+  x ^= x << 13;
+  x ^= x >> 7;
+  x ^= x << 17;
+  return x;
+}
+
+void launch_ball(struct game_state * state, double time)
 {
   if (state->balls_launched >= MAX_BALLS)
     return;
 
+  if (xorshift_state == 0x1234567812345678) {
+    double timed = time;
+    uint64_t timei = *((uint64_t *)&timed);
+    xorshift_state = xorshift64(xorshift_state + timei);
+  }
+  xorshift_state = xorshift64(xorshift_state);
+
+  uint64_t rx = (xorshift_state >> 0) & 0xffffffff;
+  double orientation = rx;
+  double x = cos(orientation) - sin(orientation);
+  double y = sin(orientation) + cos(orientation);
+  vec2 d = normalize(vec2(x, y)) * 0.2f;
+  if (d.y < 0.1)
+    d.y = 0.1;
+  if (fabsf(d.x) > 0.05)
+    d.x = 0.05f * fabsf(d.x) / d.x;
+
   struct ball_state& ball = state->balls[state->balls_launched];
   ball.ball_x = state->paddle_x;
-  ball.ball_y = 25.0;
-  ball.ball_dx = 0.1;
-  ball.ball_dy = -0.1;
+  ball.ball_y = 25.0f;
+  ball.ball_dx = d.x;
+  ball.ball_dy = -d.y;
 
   state->balls_launched += 1;
 }
@@ -30,8 +57,6 @@ void reset_level(struct game_state * state)
 {
   state->paddle_x = 0.0;
   state->paddle_y = 26.0;
-
-  launch_ball(state);
 
   state->start_time = 0.0;
 

@@ -6,7 +6,7 @@
 extern "C" {
 #endif
 
-  void launch_ball(struct game_state * state);
+  void launch_ball(struct game_state * state, double time);
   void reset_level(struct game_state * state);
   void update(struct game_state * state, double time);
 

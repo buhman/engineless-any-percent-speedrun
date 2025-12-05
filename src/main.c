@@ -217,8 +217,10 @@ int main()
       }
     }
 
+    double time = glfwGetTime();
+
     if (!last_x_press && x_press) {
-      launch_ball(&state);
+      launch_ball(&state, time);
     }
     last_x_press = x_press;
 
@@ -229,7 +231,6 @@ int main()
     if (state.paddle_x > 12 - extent)
       state.paddle_x = 12 - extent;
 
-    double time = glfwGetTime();
     update(&state, time);
 
     glEnable(GL_BLEND);
