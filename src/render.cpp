@@ -430,6 +430,8 @@ void render_font(struct mesh plane_mesh,
   // remaining
   //////////////////////////////////////////////////////////////////////
 
+  glUniform1f(uniform_time, state->time + 0.5);
+
   double remaining = state->remaining;
   if (remaining < 0.0)
     remaining = 0.0;
@@ -452,7 +454,7 @@ void render_font(struct mesh plane_mesh,
               aspect,
               a, s, r,
               28.0f, // scale
-              14 * grid_width, 1.95 * grid_height);
+              13.75 * grid_width, 1.95 * grid_height);
 
 
   //////////////////////////////////////////////////////////////////////
