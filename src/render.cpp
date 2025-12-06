@@ -288,11 +288,11 @@ void render_text(struct mesh plane_mesh,
                  float aspect,
                  mat4x4 a,
                  mat4x4 s,
-                 mat4x4 r)
+                 mat4x4 r,
+                 float _scale,
+                 int h_advance,
+                 int v_advance)
 {
-  int h_advance = 0;
-  int v_advance = 0;
-
   for (int i = 0; i < text_length; i++) {
     const char * txt = text[i];
     while (*txt) {
@@ -301,7 +301,7 @@ void render_text(struct mesh plane_mesh,
       if (c != ' ') {
         mat4x4 char_t = translate(vec3(-2 * 16 + h_advance / 8.0f,
                                        -8.0f * aspect + -v_advance / 16.0f, 0));
-        mat4x4 trans = a * scale(12.0f / vp_height) * s * char_t * r;
+        mat4x4 trans = a * scale(_scale / vp_height) * s * char_t * r;
 
         mat4x4 texture_trans = char_tex_trans(c);
 
@@ -381,6 +381,8 @@ void render_font(struct mesh plane_mesh,
   };
   const int win_length = (sizeof (win)) / (sizeof (win[0]));
 
+  float text_scale = 12.0f;
+
   if (state->intro_shown == 0) {
     vec3 base_color = vec3(1, 1, 1);
     glUniform3fv(uniform_base_color, 1, &base_color[0]);
@@ -390,7 +392,9 @@ void render_font(struct mesh plane_mesh,
                 intro,
                 intro_length,
                 aspect,
-                a, s, r);
+                a, s, r,
+                text_scale,
+                0, 0);
   } else if (state->remaining <= 0) {
     if (state->level_ix == 0) {
       vec3 base_color = vec3(1, 0.1, 0.1);
@@ -401,7 +405,9 @@ void render_font(struct mesh plane_mesh,
                   loss,
                   loss_length,
                   aspect,
-                  a, s, r);
+                  a, s, r,
+                  text_scale,
+                  0, 0);
     } else {
       vec3 base_color = vec3(0.1, 1.0, 0.1);
       glUniform3fv(uniform_base_color, 1, &base_color[0]);
@@ -411,45 +417,96 @@ void render_font(struct mesh plane_mesh,
                   win,
                   win_length,
                   aspect,
-                  a, s, r);
+                  a, s, r,
+                  text_scale,
+                  0, 0);
     }
   }
+
+  char dst[64];
+  const char * dst_l[] = { dst };
 
   //////////////////////////////////////////////////////////////////////
   // remaining
   //////////////////////////////////////////////////////////////////////
 
-  char dst[64];
-
   double remaining = state->remaining;
   if (remaining < 0.0)
     remaining = 0.0;
-  int len = unparse_double(remaining, 4, 1, dst);
 
   vec3 base_color = vec3(1, 1, 1);
   if (remaining == 0) {
     base_color = vec3(abs(sin(state->time * 2)) * 0.6 + 0.4, 0.1, 0.1);
     //base_color = vec3(1, 0.1, 0.1);
   }
-
   glUniform3fv(uniform_base_color, 1, &base_color[0]);
 
-  int h_advance = grid_width * 10;
-  int v_advance = grid_height * 5;
+  int len = unparse_double(remaining, 2, 1, dst);
+  dst[len] = 0;
 
-  for (int i = 0; i < len; i++) {
-    if (dst[i] != ' ') {
-      mat4x4 texture_trans = char_tex_trans(dst[i]);
+  render_text(plane_mesh,
+              uniform_trans,
+              uniform_texture_trans,
+              dst_l,
+              1,
+              aspect,
+              a, s, r,
+              28.0f, // scale
+              14 * grid_width, 1.95 * grid_height);
 
-      mat4x4 char_t = translate(vec3(-2 * 16 + h_advance / 8.0f,
-                                     -1.0f * aspect + -v_advance / 16.0f, 0));
-      mat4x4 trans = a * scale(26.0f / vp_height) * s * char_t * r;
 
-      glUniform4fv(uniform_trans, 4, &trans[0][0]);
-      glUniform4fv(uniform_texture_trans, 4, &texture_trans[0][0]);
-      glDrawElements(GL_TRIANGLES, plane_mesh.length, GL_UNSIGNED_INT, 0);
+  //////////////////////////////////////////////////////////////////////
+  // ball count
+  //////////////////////////////////////////////////////////////////////
+  {
+    dst[0] = 'b';
+    dst[1] = 'l';
+    int len = unparse_double(20 - state->balls_launched, 2, 1, &dst[2]);
+    dst[2] = ':';
+    for (int i = 0; i < len; i++) {
+      if (dst[2 + i] == '.')
+        dst[2 + i] = 0;
     }
-    h_advance += grid_width;
+
+    vec3 base_color = vec3(1, 1, 1);
+    glUniform3fv(uniform_base_color, 1, &base_color[0]);
+
+    render_text(plane_mesh,
+                uniform_trans,
+                uniform_texture_trans,
+                dst_l,
+                1,
+                aspect,
+                a, s, r,
+                20.0f, // scale
+                28 * grid_width, 3.75 * grid_height);
+  }
+
+  //////////////////////////////////////////////////////////////////////
+  //
+  //////////////////////////////////////////////////////////////////////
+  {
+    dst[0] = 'l';
+    dst[1] = 'v';
+    int len = unparse_double(state->level_ix + 1, 2, 1, &dst[2]);
+    dst[2] = ':';
+    for (int i = 0; i < len; i++) {
+      if (dst[2 + i] == '.')
+        dst[2 + i] = 0;
+    }
+
+    vec3 base_color = vec3(1, 1, 1);
+    glUniform3fv(uniform_base_color, 1, &base_color[0]);
+
+    render_text(plane_mesh,
+                uniform_trans,
+                uniform_texture_trans,
+                dst_l,
+                1,
+                aspect,
+                a, s, r,
+                20.0f, // scale
+                0 * grid_width, 3.75 * grid_height);
   }
 }
 
