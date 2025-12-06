@@ -22,6 +22,7 @@ extern "C" {
                      uint uniform_normal_trans,
                      uint uniform_base_color,
                      uint uniform_light_pos,
+                     uint uniform_time,
                      struct game_state * state);
 
   void render_balls(struct mesh ball_mesh,

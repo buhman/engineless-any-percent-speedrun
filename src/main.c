@@ -162,6 +162,7 @@ int main()
   uint block__uniform_normal_trans = glGetUniformLocation(block_program, "normal_trans");
   uint block__uniform_base_color = glGetUniformLocation(block_program, "base_color");
   uint block__uniform_light_pos = glGetUniformLocation(block_program, "light_pos");
+  uint block__uniform_time = glGetUniformLocation(block_program, "time");
 
   // font
 
@@ -332,6 +333,7 @@ int main()
                   block__uniform_normal_trans,
                   block__uniform_base_color,
                   block__uniform_light_pos,
+                  block__uniform_time,
                   &state);
 
     glDisable(GL_BLEND);

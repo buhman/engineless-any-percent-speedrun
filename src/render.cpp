@@ -100,6 +100,7 @@ void render_blocks(mesh block_mesh,
                    uint uniform_normal_trans,
                    uint uniform_base_color,
                    uint uniform_light_pos,
+                   uint uniform_time,
                    struct game_state * state)
 {
   light_pos_theta += 0.01;
@@ -135,6 +136,8 @@ void render_blocks(mesh block_mesh,
   //////////////////////////////////////////////////////////////////////
   // render blocks
   //////////////////////////////////////////////////////////////////////
+
+  glUniform1f(uniform_time, state->time);
 
   mat4x4 a = aspect_mat();
   vec3 light_pos = _light_pos();
