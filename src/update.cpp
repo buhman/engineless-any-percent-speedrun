@@ -9,6 +9,47 @@
 #include "level/level1.data.h"
 #include "level/level1.data.pal.h"
 
+#include "level/level2.data.h"
+#include "level/level2.data.pal.h"
+
+#include "level/level3.data.h"
+#include "level/level3.data.pal.h"
+
+#include "level/level4.data.h"
+#include "level/level4.data.pal.h"
+
+#include "level/level5.data.h"
+#include "level/level5.data.pal.h"
+
+struct level {
+  const char * data_start;
+  const char * data_pal_start;
+};
+
+const struct level levels[] = {
+  {
+    .data_start = src_level_level1_data_start,
+    .data_pal_start = src_level_level1_data_pal_start,
+  },
+  {
+    .data_start = src_level_level2_data_start,
+    .data_pal_start = src_level_level2_data_pal_start,
+  },
+  {
+    .data_start = src_level_level3_data_start,
+    .data_pal_start = src_level_level3_data_pal_start,
+  },
+  {
+    .data_start = src_level_level4_data_start,
+    .data_pal_start = src_level_level4_data_pal_start,
+  },
+  {
+    .data_start = src_level_level5_data_start,
+    .data_pal_start = src_level_level5_data_pal_start,
+  }
+};
+const int levels_length = (sizeof (levels)) * (sizeof (levels[0]));
+
 #include "math/float_types.hpp"
 #include "math/transform.hpp"
 
@@ -52,6 +93,7 @@ void launch_ball(struct game_state * state, double time)
   ball.launch_time = time;
 
   state->balls_launched += 1;
+  state->intro_shown = true;
 }
 
 void reset_level(struct game_state * state)
@@ -61,15 +103,21 @@ void reset_level(struct game_state * state)
 
   state->start_time = 0.0;
 
-  assert(src_level_level1_data_size == 13 * 28);
-  const uint8_t * level = (const uint8_t *)src_level_level1_data_start;
-  const uint8_t * pal = (const uint8_t *)src_level_level1_data_pal_start;
+  //assert(src_level_level2_data_size == 13 * 28);
+  const uint8_t * level = (const uint8_t *)levels[state->level_ix].data_start;
+  const uint8_t * pal = (const uint8_t *)levels[state->level_ix].data_pal_start;
 
   state->level = level;
   state->pal = pal;
   for (int i = 0; i < 28 * 13; i++) {
     state->blocks[i].destroyed_time = 0.0f;
   }
+}
+
+void reset_game(struct game_state * state)
+{
+  state->level_ix = 0;
+  reset_level(state);
 }
 
 static inline void ball_collision_response(struct ball_state& ball,
@@ -151,8 +199,31 @@ void update_ball(struct game_state * state, struct ball_state& ball, double time
   ball.ball_y += ball.ball_dy;
 }
 
+void update_advance_level(struct game_state * state)
+{
+  int block_count = 0;
+
+  for (int i = 0; i < 13 * 28; i++) {
+    char tile = state->level[i];
+    if (tile == 0)
+      continue;
+    if (state->blocks[i].destroyed_time != 0.0)
+      continue;
+
+    block_count += 1;
+  }
+
+  if (block_count < 10) {
+    state->level_ix = (state->level_ix + 1) % levels_length;
+    printf("next level %d\n", state->level_ix);
+    reset_level(state);
+  }
+}
+
 void update(struct game_state * state, double time)
 {
+  update_advance_level(state);
+
   if (state->remaining >= 0.0) {
     for (int i = 0; i < state->balls_launched; i++) {
       if (state->balls[i].ball_y > 30.0f)

@@ -285,7 +285,7 @@ void render_text(struct mesh plane_mesh,
 
       if (c != ' ') {
         mat4x4 char_t = translate(vec3(-2 * 16 + h_advance / 8.0f,
-                                       -3.0f * aspect + -v_advance / 16.0f, 0));
+                                       -8.0f * aspect + -v_advance / 16.0f, 0));
         mat4x4 trans = a * scale(12.0f / vp_height) * s * char_t * r;
 
         mat4x4 texture_trans = char_tex_trans(c);
@@ -366,7 +366,7 @@ void render_font(struct mesh plane_mesh,
   };
   const int win_length = (sizeof (win)) / (sizeof (win[0]));
 
-  if (state->balls_launched == 0) {
+  if (state->intro_shown == 0) {
     vec3 base_color = vec3(1, 1, 1);
     glUniform3fv(uniform_base_color, 1, &base_color[0]);
     render_text(plane_mesh,
@@ -377,7 +377,7 @@ void render_font(struct mesh plane_mesh,
                 aspect,
                 a, s, r);
   } else if (state->remaining <= 0) {
-    if (1) {
+    if (state->level_ix == 0) {
       vec3 base_color = vec3(1, 0.1, 0.1);
       glUniform3fv(uniform_base_color, 1, &base_color[0]);
       render_text(plane_mesh,

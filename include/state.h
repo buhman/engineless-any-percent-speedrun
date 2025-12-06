@@ -22,6 +22,7 @@ extern "C" {
 
   struct game_state {
     struct block_state blocks[28 * 13];
+    int level_ix;
     const uint8_t * level;
     const uint8_t * pal;
 
@@ -34,6 +35,8 @@ extern "C" {
     double start_time;
     double time;
     double remaining;
+
+    bool intro_shown;
   };
 
 #ifdef __cplusplus

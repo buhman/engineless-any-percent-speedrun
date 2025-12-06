@@ -147,7 +147,6 @@ int main()
   uint uniform_normal_trans = glGetUniformLocation(program, "normal_trans");
   uint uniform_base_color = glGetUniformLocation(program, "base_color");
   uint uniform_light_pos = glGetUniformLocation(program, "light_pos");
-  printf("attrib_t %d\n", attrib_texture);
 
   // font
 
@@ -162,7 +161,6 @@ int main()
   uint font__uniform_texture0 = glGetUniformLocation(font_program, "texture0");
   uint font__uniform_base_color = glGetUniformLocation(font_program, "base_color");
   uint font__uniform_time = glGetUniformLocation(font_program, "time");
-  printf("attrib_t %d\n", font__attrib_texture);
 
   // background
 
@@ -211,7 +209,7 @@ int main()
   const char * last_gamepad_name = NULL;
 
   struct game_state state = {0};
-  reset_level(&state);
+  reset_game(&state);
   state.start_time = glfwGetTime();
 
   glEnable(GL_DEPTH_TEST);
