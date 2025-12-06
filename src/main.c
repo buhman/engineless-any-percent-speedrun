@@ -160,6 +160,8 @@ int main()
   uint font__uniform_trans = glGetUniformLocation(font_program, "trans");
   uint font__uniform_texture_trans = glGetUniformLocation(font_program, "texture_trans");
   uint font__uniform_texture0 = glGetUniformLocation(font_program, "texture0");
+  uint font__uniform_base_color = glGetUniformLocation(font_program, "base_color");
+  uint font__uniform_time = glGetUniformLocation(font_program, "time");
   printf("attrib_t %d\n", font__attrib_texture);
 
   // background
@@ -325,7 +327,8 @@ int main()
                   paddle__uniform_time,
                   &state);
 
-    glDisable(GL_BLEND);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthFunc(GL_ALWAYS);
     glUseProgram(font_program);
     render_font(plane_mesh,
@@ -334,6 +337,8 @@ int main()
                 font__uniform_trans,
                 font__uniform_texture_trans,
                 font__uniform_texture0,
+                font__uniform_base_color,
+                font__uniform_time,
                 &state);
 
     glfwSwapBuffers(window);

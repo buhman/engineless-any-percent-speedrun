@@ -4,7 +4,7 @@ attribute vec3 position;
 attribute vec2 _texture;
 
 varying vec2 fp_texture;
-varying vec2 fp_texture_trans;
+varying vec2 fp_position;
 
 uniform vec4 trans[4];
 uniform vec4 texture_trans[4];
@@ -31,6 +31,7 @@ void main()
   vec4 tt = transform4t(vec4(_texture, 0, 1));
 
   fp_texture = tt.xy;
+  fp_position = position.xz;
 
   gl_Position = pos;
 }

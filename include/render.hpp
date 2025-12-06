@@ -31,6 +31,8 @@ extern "C" {
                    uint uniform_trans,
                    uint uniform_texture_trans,
                    uint uniform_texture0,
+                   uint uniform_base_color,
+                   uint uniform_time,
                    struct game_state * state);
 
   void render_background(struct mesh plane_mesh,

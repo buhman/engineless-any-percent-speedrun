@@ -271,6 +271,8 @@ void render_font(struct mesh plane_mesh,
                  uint uniform_trans,
                  uint uniform_texture_trans,
                  uint uniform_texture0,
+                 uint uniform_base_color,
+                 uint uniform_time,
                  struct game_state * state)
 {
   glBindBuffer(GL_ARRAY_BUFFER, plane_mesh.vtx);
@@ -302,7 +304,20 @@ void render_font(struct mesh plane_mesh,
   glUniform1i(uniform_texture0, 0);
 
   char dst[64];
-  int len = unparse_double(state->remaining, 4, 3, dst);
+
+  double remaining = state->remaining;
+  if (remaining < 0.0)
+    remaining = 0.0;
+  int len = unparse_double(remaining, 4, 1, dst);
+
+  vec3 base_color = vec3(1, 1, 1);
+  if (remaining == 0) {
+    base_color = vec3(abs(sin(state->time * 2)) * 0.6 + 0.4, 0.1, 0.1);
+    //base_color = vec3(1, 0.1, 0.1);
+  }
+
+  glUniform1f(uniform_time, state->time);
+  glUniform3fv(uniform_base_color, 1, &base_color[0]);
 
   int advance = 0;
   for (int i = 0; i < len; i++) {
