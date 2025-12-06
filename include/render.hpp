@@ -49,7 +49,10 @@ extern "C" {
                          uint attrib_position,
                          uint uniform_resolution,
                          uint uniform_trans,
+                         uint uniform_texture1,
                          uint uniform_time,
+                         uint uniform_palette,
+                         uint uniform_aspect,
                          struct game_state * state);
 
   void render_paddle(struct mesh paddle_mesh,

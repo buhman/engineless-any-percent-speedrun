@@ -36,6 +36,7 @@ extern "C" {
     double start_time;
     double time;
     double remaining;
+    double time_bg;
 
     bool intro_shown;
   };

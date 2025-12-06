@@ -6,7 +6,6 @@
 
 #include "unparse.h"
 #include "render.hpp"
-#include "color.hpp"
 #include "math/float_types.hpp"
 #include "math/transform.hpp"
 
@@ -190,6 +189,13 @@ void render_blocks(mesh block_mesh,
   }
 }
 
+vec3 sample_palette(float d, vec3 p) {
+  vec3 v = vec3(d, d, d) + p;
+  v = v * vec3(6.28318548202514648438f) ;
+  v = vec3(cos(v.x), cos(v.y), cos(v.z));
+  return vec3(0.5, 0.5, 0.5) * v + vec3(0.5, 0.5, 0.5); // 48
+}
+
 void render_balls(mesh ball_mesh,
                   uint attrib_position,
                   uint attrib_texture,
@@ -249,14 +255,7 @@ void render_balls(mesh ball_mesh,
     vec4 base_color = vec4(0.5f, 0.5f, 0.5f, 1.0f);
     if (ball.super_ball) {
       float hue = state->time - ball.launch_time;
-      hue = hue - floorf(hue);
-      vec3 c = hsv_to_rgb(hue, 1.0f, 1.0f);
-      base_color = vec4(c.x, c.y, c.z, 1.0f);
-    } else if (0) {
-      float hue = sin(ball.launch_time) * 0.5 - 0.5;
-      hue = hue - floorf(hue);
-      vec3 c = hsv_to_rgb(hue, 1.0f, 1.0f);
-      base_color = vec4(c.x, c.y, c.z, 1.0f) * 0.5f;
+      base_color = sample_palette(hue, vec3(0, 0.33, 0.67));
     }
 
     glUniform4fv(uniform_trans, 4, &trans[0][0]);
@@ -307,9 +306,10 @@ void render_text(struct mesh plane_mesh,
                  mat4x4 s,
                  mat4x4 r,
                  float _scale,
-                 int h_advance,
+                 int h_advance_init,
                  int v_advance)
 {
+  int h_advance = h_advance_init;
   for (int i = 0; i < text_length; i++) {
     const char * txt = text[i];
     while (*txt) {
@@ -330,7 +330,7 @@ void render_text(struct mesh plane_mesh,
       h_advance += grid_width;
     }
     v_advance += grid_height;
-    h_advance = 0;
+    h_advance = h_advance_init;
   }
 }
 
@@ -388,7 +388,7 @@ void render_font(struct mesh plane_mesh,
   const int intro_length = (sizeof (intro)) / (sizeof (intro[0]));
 
   const char * loss[] = {
-    "You were not successful.",
+    "You were not prepared.",
     "Press option to retry.",
   };
   const int loss_length = (sizeof (loss)) / (sizeof (loss[0]));
@@ -411,7 +411,7 @@ void render_font(struct mesh plane_mesh,
                 aspect,
                 a, s, r,
                 text_scale,
-                0, 0);
+                -grid_width * 3, 0);
   } else if (state->remaining <= 0) {
     if (state->level_ix == 0) {
       vec3 base_color = vec3(1, 0.1, 0.1);
@@ -533,7 +533,10 @@ void render_background(struct mesh plane_mesh,
                        uint attrib_position,
                        uint uniform_resolution,
                        uint uniform_trans,
+                       uint uniform_texture1,
                        uint uniform_time,
+                       uint uniform_palette,
+                       uint uniform_aspect,
                        struct game_state * state)
 {
   glBindBuffer(GL_ARRAY_BUFFER, plane_mesh.vtx);
@@ -552,13 +555,23 @@ void render_background(struct mesh plane_mesh,
   mat4x4 trans = r;
   glUniform4fv(uniform_trans, 4, &trans[0][0]);
 
-  if (state->balls_launched == 0 || state->remaining <= 0.0) {
-    glUniform1f(uniform_time, 0);
-  } else {
-    glUniform1f(uniform_time, state->time);
-  }
+  glUniform1i(uniform_texture1, 1);
+
+  glUniform1f(uniform_time, state->time_bg);
   vec2 resolution = vec2(vp_width, vp_height);
   glUniform2fv(uniform_resolution, 1, &resolution[0]);
+
+  const vec3 palettes[5] = {
+    vec3(0.440f, 0.021f, 0.512f),
+    vec3(0.131f, 0.958f, 0.678f),
+    vec3(0.507f, 0.407f, 0.103f),
+    vec3(0.709f, 0.240f, 0.475f),
+    vec3(0.658f, 0.944f, 0.719f),
+  };
+  glUniform3fv(uniform_palette, 1, &palettes[state->level_ix % 5][0]);
+
+  float aspect = (float)vp_height / (float)vp_width;
+  glUniform1f(uniform_aspect, aspect);
 
   glDrawElements(GL_TRIANGLES, plane_mesh.length, GL_UNSIGNED_INT, 0);
 }

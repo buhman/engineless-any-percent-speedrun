@@ -239,6 +239,10 @@ void update(struct game_state * state, double time)
     state->start_time = time;
   }
 
+  double dt = time - state->time;
   state->time = time;
+  if (!(state->balls_launched == 0 || state->remaining <= 0.0)) {
+    state->time_bg += dt;
+  }
   state->remaining = 20.0 - (time - state->start_time);
 }

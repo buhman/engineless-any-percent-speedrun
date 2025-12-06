@@ -17,6 +17,7 @@
 #include "shader/block.fp.glsl.h"
 
 #include "font/ter_u32n.data.h"
+#include "texture/noise.data.h"
 
 #include "opengl.h"
 #include "render.hpp"
@@ -187,7 +188,10 @@ int main()
   uint bg__attrib_position = glGetAttribLocation(bg_program, "position");
   uint bg__uniform_resolution = glGetUniformLocation(bg_program, "resolution");
   uint bg__uniform_trans = glGetUniformLocation(bg_program, "trans");
+  uint bg__uniform_texture1 = glGetUniformLocation(bg_program, "texture1");
   uint bg__uniform_time = glGetUniformLocation(bg_program, "time");
+  uint bg__uniform_palette = glGetUniformLocation(bg_program, "palette");
+  uint bg__uniform_aspect = glGetUniformLocation(bg_program, "aspect");
 
   // paddle
 
@@ -207,12 +211,21 @@ int main()
   // textures
   //////////////////////////////////////////////////////////////////////
 
+  glActiveTexture(GL_TEXTURE0);
   uint terminus_font = make_texture(src_font_ter_u32n_data_start,
                                     GL_RED,
                                     256,
                                     256,
                                     GL_RED);
   (void)terminus_font;
+
+  glActiveTexture(GL_TEXTURE1);
+  uint noise_texture = make_texture(src_texture_noise_data_start,
+                                    GL_RGBA,
+                                    256,
+                                    256,
+                                    GL_RGBA);
+  (void)noise_texture;
 
   //////////////////////////////////////////////////////////////////////
   // main loop
@@ -318,7 +331,10 @@ int main()
                       bg__attrib_position,
                       bg__uniform_resolution,
                       bg__uniform_trans,
+                      bg__uniform_texture1,
                       bg__uniform_time,
+                      bg__uniform_palette,
+                      bg__uniform_aspect,
                       &state);
 
     glEnable(GL_BLEND);
