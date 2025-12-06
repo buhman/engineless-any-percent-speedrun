@@ -100,11 +100,6 @@ void launch_ball(struct game_state * state, double time)
 
 void reset_level(struct game_state * state)
 {
-  state->paddle_x = 0.0;
-  state->paddle_y = 26.0;
-
-  state->start_time = 0.0;
-
   //assert(src_level_level2_data_size == 13 * 28);
   const uint8_t * level = (const uint8_t *)levels[state->level_ix].data_start;
   const uint8_t * pal = (const uint8_t *)levels[state->level_ix].data_pal_start;
@@ -118,6 +113,10 @@ void reset_level(struct game_state * state)
 
 void reset_game(struct game_state * state)
 {
+  state->paddle_x = 0;
+  state->paddle_y = 26.0;
+
+  state->balls_launched = 0;
   state->level_ix = 0;
   reset_level(state);
 }

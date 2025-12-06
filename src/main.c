@@ -225,7 +225,9 @@ int main()
     float paddle_dx = 0.0;
     //float paddle_dy = 0.0;
     static bool last_x_press = false;
+    static bool last_option_press = false;
     bool x_press = false;
+    bool option_press = false;
 
     for (int i = 0; i < 16; i++) {
       int present = glfwJoystickPresent(GLFW_JOYSTICK_1 + i);
@@ -253,6 +255,7 @@ int main()
         #endif
 
         x_press = buttons[X_BUTTON] != 0;
+        option_press = buttons[OPTIONS_BUTTON] != 0;
 
         const char * name = glfwGetJoystickName(GLFW_JOYSTICK_1 + i);
         if (name != last_gamepad_name) {
@@ -277,6 +280,11 @@ int main()
       launch_ball(&state, time);
     }
     last_x_press = x_press;
+
+    if (!last_option_press && option_press) {
+      reset_game(&state);
+    }
+    last_option_press = option_press;
 
     float extent = 0.25;
     state.paddle_x += paddle_dx;
