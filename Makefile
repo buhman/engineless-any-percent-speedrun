@@ -16,9 +16,10 @@ CFLAGS += -Wno-error=unused-const-variable
 CFLAGS += -Wno-error=unused-but-set-variable
 CFLAGS += -Wno-error=unused-variable
 CFLAGS += -I$(MAKEFILE_PATH)/include
+CXXFLAGS += -fno-exceptions
 #CFLAGS += -DDEBUG_BUTTONS
 #CFLAGS += -DDEBUG_AXES
-LDFLAGS += -lm
+LDFLAGS += -nostdlib++ -lm -static-libgcc
 ifeq ($(OS),Windows_NT)
 LDFLAGS += -Wl,--subsystem,windows -mwindows
 endif
@@ -27,12 +28,28 @@ ifndef GLFW
 $(error GLFW undefined)
 endif
 
-ifeq ($(shell uname),Linux)
-OBJARCH = -O elf64-x86-64
-LDFLAGS += -z noexecstack
-else
-OBJARCH = -O pe-x86-64 -B i386:x86-64
+ifdef I386
+ARCH='-m32'
 endif
+
+ifeq ($(shell uname),Linux)
+
+LDFLAGS += -z noexecstack
+ifdef I386
+OBJARCH = -O elf32-i386 -B i386
+else
+OBJARCH = -O elf64-x86-64 -B i386:x86-64
+endif
+
+else
+
+ifdef I386
+OBJARCH += -O pe-i386 -B i386
+else
+OBJARCH += -O pe-x86-64 -B i386:x86-64
+endif
+
+endif # ifeq ($(shell uname),Linux)
 
 DEPFLAGS = -MMD -MP
 
@@ -98,10 +115,10 @@ clean:
 	rm -f main
 
 %.o: %.cpp
-	$(CXX) $(CXXSTD) $(CFLAGS) $(OPT) $(DEBUG) $(DEPFLAGS) -MF ${<}.d -c $< -o $@
+	$(CXX) $(CXXSTD) $(ARCH) $(CFLAGS) $(OPT) $(DEBUG) $(DEPFLAGS) -MF ${<}.d -c $< -o $@
 
 %.o: %.c
-	$(CC) $(CSTD) $(CFLAGS) $(OPT) $(DEBUG) $(DEPFLAGS) -MF ${<}.d -c $< -o $@
+	$(CC) $(CSTD) $(ARCH) $(CFLAGS) $(CXXFLAGS) $(OPT) $(DEBUG) $(DEPFLAGS) -MF ${<}.d -c $< -o $@
 
 MAIN_OBJS = \
 	src/main.o \
@@ -119,7 +136,7 @@ MAIN_OBJS = \
 	$(GLFW)
 
 main: $(MAIN_OBJS)
-	$(CXX) $^ -o $@ $(LDFLAGS)
+	$(CXX) $^ $(CXXFLAGS) $(ARCH) -o $@ $(LDFLAGS)
 
 #-include $(shell find -type f -name 'src/*.d')
 
