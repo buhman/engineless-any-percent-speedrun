@@ -194,10 +194,19 @@ void render(mesh block_mesh,
 
     mat4x4 trans = a * t * ry * rx;
     mat3x3 normal_trans = submatrix(ry * rx, 3, 3);
-    float hue = state->time - ball.launch_time;
-    hue = hue - floorf(hue);
-    vec3 c = hsv_to_rgb(hue, 1.0f, 1.0f);
-    vec4 base_color = vec4(c.x, c.y, c.z, 1.0f);
+
+    vec4 base_color = vec4(0.5f, 0.5f, 0.5f, 1.0f);
+    if (ball.super_ball) {
+      float hue = state->time - ball.launch_time;
+      hue = hue - floorf(hue);
+      vec3 c = hsv_to_rgb(hue, 1.0f, 1.0f);
+      base_color = vec4(c.x, c.y, c.z, 1.0f);
+    } else if (0) {
+      float hue = sin(ball.launch_time) * 0.5 - 0.5;
+      hue = hue - floorf(hue);
+      vec3 c = hsv_to_rgb(hue, 1.0f, 1.0f);
+      base_color = vec4(c.x, c.y, c.z, 1.0f) * 0.5f;
+    }
 
     glBindBuffer(GL_ARRAY_BUFFER, ball_mesh.vtx);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ball_mesh.idx);

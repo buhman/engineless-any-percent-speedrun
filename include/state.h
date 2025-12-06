@@ -16,6 +16,7 @@ extern "C" {
     float ball_dx;
     float ball_dy;
     double launch_time;
+    bool super_ball;
   };
 
   #define MAX_BALLS 20

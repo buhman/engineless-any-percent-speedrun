@@ -92,6 +92,8 @@ void launch_ball(struct game_state * state, double time)
   ball.ball_dy = -d.y;
   ball.launch_time = time;
 
+  ball.super_ball = state->balls_launched % 5 == 4;
+
   state->balls_launched += 1;
   state->intro_shown = true;
 }
@@ -154,7 +156,8 @@ void update_ball(struct game_state * state, struct ball_state& ball, double time
       struct collision_data cd;
       bool collided = aabb_circle_collision(block_position, ball_position, block_bounds, &cd);
       if (collided) {
-        ball_collision_response(ball, cd);
+        if (ball.super_ball == 0)
+          ball_collision_response(ball, cd);
         state->blocks[block_ix].destroyed_time = time;
       }
     }
