@@ -1,0 +1,15 @@
+cmake \
+    -DGLFW_BUILD_X11=1 \
+    -DGLFW_BUILD_WAYLAND=1 \
+    -DGLFW_BUILD_EXAMPLES=0 \
+    -DBUILD_SHARED_LIBS=0 \
+    -DCMAKE_BUILD_TYPE=Release \
+    .
+
+CFLAGS="-m32" cmake \
+    -DGLFW_BUILD_X11=1 \
+    -DGLFW_BUILD_WAYLAND=1 \
+    -DGLFW_BUILD_EXAMPLES=0 \
+    -DBUILD_SHARED_LIBS=0 \
+    -DCMAKE_BUILD_TYPE=Release \
+    .

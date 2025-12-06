@@ -1,0 +1,9 @@
+cmake \
+    -DWIN32=1 \
+    -DGLFW_BUILD_WIN32=1 \
+    -DGLFW_BUILD_X11=0 \
+    -DGLFW_BUILD_WAYLAND=0 \
+    -DGLFW_BUILD_EXAMPLES=0 \
+    -DBUILD_SHARED_LIBS=0 \
+    -DCMAKE_BUILD_TYPE=Release \
+    .
