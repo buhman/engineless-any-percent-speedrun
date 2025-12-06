@@ -165,7 +165,8 @@ void render(mesh block_mesh,
         base_color = vec4(1, 0, 0, (float)((2.0 - dt) * 0.5));
         block_position.y -= dt * 10.0;
         block_position.z += 1;
-        rot = dt;
+        float dir = fabsf(sin(destroyed_time * 100)) / sin(destroyed_time * 100);
+        rot = dt * dir;
       }
 
       mat4x4 rx = rotate_x(-PI / 2.0f);
