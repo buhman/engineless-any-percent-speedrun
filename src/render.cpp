@@ -157,16 +157,22 @@ void render(mesh block_mesh,
                              ((float)state->pal[tile * 3 + 1]) * cs,
                              ((float)state->pal[tile * 3 + 2]) * cs,
                              1.0f);
-      if (destroyed_time != 0.0) {
-        base_color = vec4(1, 0, 0, (float)((2.0 - dt) * 0.5));
-      }
 
       vec3 block_position = vec3(x * 4.0f, -y * 2.0f, 0.0f);
+      float rot = 0.0;
+
+      if (destroyed_time != 0.0) {
+        base_color = vec4(1, 0, 0, (float)((2.0 - dt) * 0.5));
+        block_position.y -= dt * 10.0;
+        block_position.z += 1;
+        rot = dt;
+      }
 
       mat4x4 rx = rotate_x(-PI / 2.0f);
+      mat4x4 rz = rotate_z(rot);
       mat4x4 t = translate(block_position);
 
-      mat4x4 trans = a * t * rx;
+      mat4x4 trans = a * t * rz * rx;
 
       //mat3x3 normal_trans = transpose(inverse(submatrix(trans, 0, 0)));
       mat3x3 normal_trans = submatrix(rx, 3, 3);
@@ -359,7 +365,7 @@ void render_font(struct mesh plane_mesh,
     "Keyboard is not supported.",
     "PlayStation DualShock 4 recommended.",
     "Press cross to launch ball(s).",
-    "Analog triggers to move paddle.",
+    "Analog triggers move the paddle.",
     "Finish level 1 before the timer elapses.",
   };
   const int intro_length = (sizeof (intro)) / (sizeof (intro[0]));
