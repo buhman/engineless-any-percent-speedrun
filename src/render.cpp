@@ -92,22 +92,17 @@ static inline vec3 _light_pos()
   return pos;
 }
 
-void render(mesh block_mesh,
-            mesh ball_mesh,
-            uint attrib_position,
-            uint attrib_texture,
-            uint attrib_normal,
-            uint uniform_trans,
-            uint uniform_normal_trans,
-            uint uniform_base_color,
-            uint uniform_light_pos,
-            struct game_state * state)
+void render_blocks(mesh block_mesh,
+                   uint attrib_position,
+                   uint attrib_texture,
+                   uint attrib_normal,
+                   uint uniform_trans,
+                   uint uniform_normal_trans,
+                   uint uniform_base_color,
+                   uint uniform_light_pos,
+                   struct game_state * state)
 {
   light_pos_theta += 0.01;
-
-  //////////////////////////////////////////////////////////////////////
-  // render blocks
-  //////////////////////////////////////////////////////////////////////
 
   glBindBuffer(GL_ARRAY_BUFFER, block_mesh.vtx);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, block_mesh.idx);
@@ -136,6 +131,10 @@ void render(mesh block_mesh,
   glEnableVertexAttribArray(attrib_position);
   glEnableVertexAttribArray(attrib_texture);
   glEnableVertexAttribArray(attrib_normal);
+
+  //////////////////////////////////////////////////////////////////////
+  // render blocks
+  //////////////////////////////////////////////////////////////////////
 
   mat4x4 a = aspect_mat();
   vec3 light_pos = _light_pos();
@@ -186,10 +185,52 @@ void render(mesh block_mesh,
       glDrawElements(GL_TRIANGLES, block_mesh.length, GL_UNSIGNED_INT, 0);
     }
   }
+}
+
+void render_balls(mesh ball_mesh,
+                  uint attrib_position,
+                  uint attrib_texture,
+                  uint attrib_normal,
+                  uint uniform_trans,
+                  uint uniform_normal_trans,
+                  uint uniform_base_color,
+                  uint uniform_light_pos,
+                  struct game_state * state)
+{
+  glBindBuffer(GL_ARRAY_BUFFER, ball_mesh.vtx);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ball_mesh.idx);
+
+  glVertexAttribPointer(attrib_position,
+                        3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        (sizeof (float)) * 8,
+                        (void*)(0 * 4)
+                        );
+  glVertexAttribPointer(attrib_texture,
+                        2,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        (sizeof (float)) * 8,
+                        (void*)(3 * 4)
+                        );
+  glVertexAttribPointer(attrib_normal,
+                        3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        (sizeof (float)) * 8,
+                        (void*)(5 * 4)
+                        );
+  glEnableVertexAttribArray(attrib_position);
+  glEnableVertexAttribArray(attrib_texture);
+  glEnableVertexAttribArray(attrib_normal);
 
   //////////////////////////////////////////////////////////////////////
   // render balls
   //////////////////////////////////////////////////////////////////////
+
+  mat4x4 a = aspect_mat();
+  vec3 light_pos = _light_pos();
 
   for (int i = 0; i < state->balls_launched; i++) {
     struct ball_state& ball = state->balls[i];
@@ -214,34 +255,6 @@ void render(mesh block_mesh,
       vec3 c = hsv_to_rgb(hue, 1.0f, 1.0f);
       base_color = vec4(c.x, c.y, c.z, 1.0f) * 0.5f;
     }
-
-    glBindBuffer(GL_ARRAY_BUFFER, ball_mesh.vtx);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ball_mesh.idx);
-
-    glVertexAttribPointer(attrib_position,
-                          3,
-                          GL_FLOAT,
-                          GL_FALSE,
-                          (sizeof (float)) * 8,
-                          (void*)(0 * 4)
-                          );
-    glVertexAttribPointer(attrib_texture,
-                          2,
-                          GL_FLOAT,
-                          GL_FALSE,
-                          (sizeof (float)) * 8,
-                          (void*)(3 * 4)
-                          );
-    glVertexAttribPointer(attrib_normal,
-                          3,
-                          GL_FLOAT,
-                          GL_FALSE,
-                          (sizeof (float)) * 8,
-                          (void*)(5 * 4)
-                          );
-    glEnableVertexAttribArray(attrib_position);
-    glEnableVertexAttribArray(attrib_texture);
-    glEnableVertexAttribArray(attrib_normal);
 
     glUniform4fv(uniform_trans, 4, &trans[0][0]);
     glUniform3fv(uniform_normal_trans, 3, &normal_trans[0][0]);

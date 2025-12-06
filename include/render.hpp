@@ -14,16 +14,25 @@ extern "C" {
     uint length;
   };
 
-  void render(struct mesh brick_mesh,
-              struct mesh ball_mesh,
-              uint attrib_position,
-              uint attrib_texture,
-              uint attrib_normal,
-              uint uniform_trans,
-              uint uniform_normal_trans,
-              uint uniform_base_color,
-              uint uniform_light_pos,
-              struct game_state * state);
+  void render_blocks(struct mesh block_mesh,
+                     uint attrib_position,
+                     uint attrib_texture,
+                     uint attrib_normal,
+                     uint uniform_trans,
+                     uint uniform_normal_trans,
+                     uint uniform_base_color,
+                     uint uniform_light_pos,
+                     struct game_state * state);
+
+  void render_balls(struct mesh ball_mesh,
+                    uint attrib_position,
+                    uint attrib_texture,
+                    uint attrib_normal,
+                    uint uniform_trans,
+                    uint uniform_normal_trans,
+                    uint uniform_base_color,
+                    uint uniform_light_pos,
+                    struct game_state * state);
 
   void render_font(struct mesh plane_mesh,
                    uint attrib_position,

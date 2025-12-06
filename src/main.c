@@ -14,6 +14,7 @@
 #include "shader/background.fp.glsl.h"
 #include "shader/background.vp.glsl.h"
 #include "shader/paddle.fp.glsl.h"
+#include "shader/block.fp.glsl.h"
 
 #include "font/ter_u32n.data.h"
 
@@ -136,17 +137,31 @@ int main()
 
   //
 
-  uint program = compile_shader(src_shader_vertex_color_vp_glsl_start,
-                                src_shader_vertex_color_vp_glsl_size,
-                                src_shader_vertex_color_fp_glsl_start,
-                                src_shader_vertex_color_fp_glsl_size);
-  uint attrib_position = glGetAttribLocation(program, "position");
-  uint attrib_texture = glGetAttribLocation(program, "_texture");
-  uint attrib_normal = glGetAttribLocation(program, "normal");
-  uint uniform_trans = glGetUniformLocation(program, "trans");
-  uint uniform_normal_trans = glGetUniformLocation(program, "normal_trans");
-  uint uniform_base_color = glGetUniformLocation(program, "base_color");
-  uint uniform_light_pos = glGetUniformLocation(program, "light_pos");
+  uint ball_program = compile_shader(src_shader_vertex_color_vp_glsl_start,
+                                     src_shader_vertex_color_vp_glsl_size,
+                                     src_shader_vertex_color_fp_glsl_start,
+                                     src_shader_vertex_color_fp_glsl_size);
+  uint ball__attrib_position = glGetAttribLocation(ball_program, "position");
+  uint ball__attrib_texture = glGetAttribLocation(ball_program, "_texture");
+  uint ball__attrib_normal = glGetAttribLocation(ball_program, "normal");
+  uint ball__uniform_trans = glGetUniformLocation(ball_program, "trans");
+  uint ball__uniform_normal_trans = glGetUniformLocation(ball_program, "normal_trans");
+  uint ball__uniform_base_color = glGetUniformLocation(ball_program, "base_color");
+  uint ball__uniform_light_pos = glGetUniformLocation(ball_program, "light_pos");
+
+  // block
+
+  uint block_program = compile_shader(src_shader_vertex_color_vp_glsl_start,
+                                      src_shader_vertex_color_vp_glsl_size,
+                                      src_shader_block_fp_glsl_start,
+                                      src_shader_block_fp_glsl_size);
+  uint block__attrib_position = glGetAttribLocation(block_program, "position");
+  uint block__attrib_texture = glGetAttribLocation(block_program, "_texture");
+  uint block__attrib_normal = glGetAttribLocation(block_program, "normal");
+  uint block__uniform_trans = glGetUniformLocation(block_program, "trans");
+  uint block__uniform_normal_trans = glGetUniformLocation(block_program, "normal_trans");
+  uint block__uniform_base_color = glGetUniformLocation(block_program, "base_color");
+  uint block__uniform_light_pos = glGetUniformLocation(block_program, "light_pos");
 
   // font
 
@@ -308,17 +323,29 @@ int main()
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthFunc(GL_GREATER);
-    glUseProgram(program);
-    render(block_mesh,
-           ball_mesh,
-           attrib_position,
-           attrib_texture,
-           attrib_normal,
-           uniform_trans,
-           uniform_normal_trans,
-           uniform_base_color,
-           uniform_light_pos,
-           &state);
+    glUseProgram(block_program);
+    render_blocks(block_mesh,
+                  block__attrib_position,
+                  block__attrib_texture,
+                  block__attrib_normal,
+                  block__uniform_trans,
+                  block__uniform_normal_trans,
+                  block__uniform_base_color,
+                  block__uniform_light_pos,
+                  &state);
+
+    glDisable(GL_BLEND);
+    glDepthFunc(GL_GREATER);
+    glUseProgram(ball_program);
+    render_balls(ball_mesh,
+                 ball__attrib_position,
+                 ball__attrib_texture,
+                 ball__attrib_normal,
+                 ball__uniform_trans,
+                 ball__uniform_normal_trans,
+                 ball__uniform_base_color,
+                 ball__uniform_light_pos,
+                 &state);
 
     glDisable(GL_BLEND);
     glDepthFunc(GL_GREATER);
