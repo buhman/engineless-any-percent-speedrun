@@ -265,6 +265,43 @@ static inline int max(int a, int b)
     return b;
 }
 
+void render_text(struct mesh plane_mesh,
+                 uint uniform_trans,
+                 uint uniform_texture_trans,
+                 const char ** text,
+                 int text_length,
+                 float aspect,
+                 mat4x4 a,
+                 mat4x4 s,
+                 mat4x4 r)
+{
+  int h_advance = 0;
+  int v_advance = 0;
+
+  for (int i = 0; i < text_length; i++) {
+    const char * txt = text[i];
+    while (*txt) {
+      char c = *txt++;
+
+      if (c != ' ') {
+        mat4x4 char_t = translate(vec3(-2 * 16 + h_advance / 8.0f,
+                                       -3.0f * aspect + -v_advance / 16.0f, 0));
+        mat4x4 trans = a * scale(12.0f / vp_height) * s * char_t * r;
+
+        mat4x4 texture_trans = char_tex_trans(c);
+
+        glUniform4fv(uniform_trans, 4, &trans[0][0]);
+        glUniform4fv(uniform_texture_trans, 4, &texture_trans[0][0]);
+        glDrawElements(GL_TRIANGLES, plane_mesh.length, GL_UNSIGNED_INT, 0);
+      }
+
+      h_advance += grid_width;
+    }
+    v_advance += grid_height;
+    h_advance = 0;
+  }
+}
+
 void render_font(struct mesh plane_mesh,
                  uint attrib_position,
                  uint attrib_texture,
@@ -302,6 +339,70 @@ void render_font(struct mesh plane_mesh,
   mat4x4 r = rotate_y(PI / 1.0f) * rotate_z(PI / 1.0f) * rotate_x(PI / 2.0f);
 
   glUniform1i(uniform_texture0, 0);
+  glUniform1f(uniform_time, state->time);
+
+  //////////////////////////////////////////////////////////////////////
+  // instructions
+  //////////////////////////////////////////////////////////////////////
+
+  const char * intro[] = {
+    "This game requires a gamepad.",
+    "Keyboard is not supported.",
+    "PlayStation DualShock 4 recommended.",
+    "Press cross to launch ball(s).",
+    "Analog triggers to move paddle.",
+    "Finish level 1 before the timer elapses.",
+  };
+  const int intro_length = (sizeof (intro)) / (sizeof (intro[0]));
+
+  const char * loss[] = {
+    "You were not successful.",
+    "Press option to retry.",
+  };
+  const int loss_length = (sizeof (loss)) / (sizeof (loss[0]));
+
+  const char * win[] = {
+    "Your performance is satisfactory.",
+  };
+  const int win_length = (sizeof (win)) / (sizeof (win[0]));
+
+  if (state->balls_launched == 0) {
+    vec3 base_color = vec3(1, 1, 1);
+    glUniform3fv(uniform_base_color, 1, &base_color[0]);
+    render_text(plane_mesh,
+                uniform_trans,
+                uniform_texture_trans,
+                intro,
+                intro_length,
+                aspect,
+                a, s, r);
+  } else if (state->remaining <= 0) {
+    if (1) {
+      vec3 base_color = vec3(1, 0.1, 0.1);
+      glUniform3fv(uniform_base_color, 1, &base_color[0]);
+      render_text(plane_mesh,
+                  uniform_trans,
+                  uniform_texture_trans,
+                  loss,
+                  loss_length,
+                  aspect,
+                  a, s, r);
+    } else {
+      vec3 base_color = vec3(0.1, 1.0, 0.1);
+      glUniform3fv(uniform_base_color, 1, &base_color[0]);
+      render_text(plane_mesh,
+                  uniform_trans,
+                  uniform_texture_trans,
+                  win,
+                  win_length,
+                  aspect,
+                  a, s, r);
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////
+  // remaining
+  //////////////////////////////////////////////////////////////////////
 
   char dst[64];
 
@@ -316,22 +417,24 @@ void render_font(struct mesh plane_mesh,
     //base_color = vec3(1, 0.1, 0.1);
   }
 
-  glUniform1f(uniform_time, state->time);
   glUniform3fv(uniform_base_color, 1, &base_color[0]);
 
-  int advance = 0;
+  int h_advance = grid_width * 10;
+  int v_advance = grid_height * 5;
+
   for (int i = 0; i < len; i++) {
     if (dst[i] != ' ') {
       mat4x4 texture_trans = char_tex_trans(dst[i]);
 
-      mat4x4 char_t = translate(vec3(advance / 8.0f, -8.0f * aspect, 0));
-      mat4x4 trans = a * scale(32.0f / vp_height) * s * char_t * r;
+      mat4x4 char_t = translate(vec3(-2 * 16 + h_advance / 8.0f,
+                                     -1.0f * aspect + -v_advance / 16.0f, 0));
+      mat4x4 trans = a * scale(26.0f / vp_height) * s * char_t * r;
 
       glUniform4fv(uniform_trans, 4, &trans[0][0]);
       glUniform4fv(uniform_texture_trans, 4, &texture_trans[0][0]);
       glDrawElements(GL_TRIANGLES, plane_mesh.length, GL_UNSIGNED_INT, 0);
     }
-    advance += grid_width;
+    h_advance += grid_width;
   }
 }
 
@@ -357,7 +460,12 @@ void render_background(struct mesh plane_mesh,
   mat4x4 r = rotate_y(PI / 1.0f) * rotate_z(PI / 1.0f) * rotate_x(PI / 2.0f);
   mat4x4 trans = r;
   glUniform4fv(uniform_trans, 4, &trans[0][0]);
-  glUniform1f(uniform_time, state->time);
+
+  if (state->balls_launched == 0 || state->remaining <= 0.0) {
+    glUniform1f(uniform_time, 0);
+  } else {
+    glUniform1f(uniform_time, state->time);
+  }
   vec2 resolution = vec2(vp_width, vp_height);
   glUniform2fv(uniform_resolution, 1, &resolution[0]);
 

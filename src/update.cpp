@@ -153,11 +153,13 @@ void update_ball(struct game_state * state, struct ball_state& ball, double time
 
 void update(struct game_state * state, double time)
 {
-  for (int i = 0; i < state->balls_launched; i++) {
-    if (state->balls[i].ball_y > 30.0f)
-      continue;
+  if (state->remaining >= 0.0) {
+    for (int i = 0; i < state->balls_launched; i++) {
+      if (state->balls[i].ball_y > 30.0f)
+        continue;
 
-    update_ball(state, state->balls[i], time);
+      update_ball(state, state->balls[i], time);
+    }
   }
 
   if (state->balls_launched == 0) {

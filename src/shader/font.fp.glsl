@@ -26,7 +26,7 @@ void main()
 
   float red_alpha = (1.0 - length(uv) + sin(time * 3) * abs(sin(time + uv.x * 2 + uv.y * 2)));
 
-  float alpha = (base_color.y == 1.0) ? 1.0 : red_alpha;
+  float alpha = (base_color.x == 1.0 && base_color.y == 1.0 && base_color.z == 1.0) ? 1.0 : red_alpha;
   gl_FragColor = vec4(base_color * (i + alpha), 1.0);
   //gl_FragColor = vec4(d, d, d, 1);
   //gl_FragColor = vec4(fp_position.xy, 0, 1.0);
