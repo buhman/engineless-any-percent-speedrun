@@ -16,6 +16,7 @@ CFLAGS += -Wno-error=unused-const-variable
 CFLAGS += -Wno-error=unused-but-set-variable
 CFLAGS += -Wno-error=unused-variable
 CFLAGS += -I$(MAKEFILE_PATH)/include
+CFLAGS += -I$(dir $(GLFW))../include
 CXXFLAGS += -fno-exceptions
 #CFLAGS += -DDEBUG_BUTTONS
 #CFLAGS += -DDEBUG_AXES

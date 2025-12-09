@@ -55,20 +55,6 @@ mat4x4 perspective(float low1, float high1,
   return m3;
 }
 
-static const float x_scale = 1.0f / 12.0f;
-//static const float y_scale = 1.0f / 27.0f;
-static const float y_scale = 1.0f / 12.0f;
-
-static inline float px(float x)
-{
-  return (x * x_scale) * 2.0 - 1.0 + x_scale;
-}
-
-static inline float py(float y)
-{
-  return (y * y_scale) * -2.0 + 1.0 - y_scale;
-}
-
 /*
   levels are 13x28
  */
@@ -166,7 +152,7 @@ void render_blocks(mesh block_mesh,
         base_color = vec4(1, 0, 0, (float)((2.0 - dt) * 0.5));
         block_position.y -= dt * 10.0;
         block_position.z += 1;
-        float dir = fabsf(sin(destroyed_time * 100)) / sin(destroyed_time * 100);
+        float dir = fabs(sin(destroyed_time * 100)) / sin(destroyed_time * 100);
         rot = dt * dir;
       }
 
@@ -286,14 +272,6 @@ static inline mat4x4 char_tex_trans(char c)
   mat4x4 texture_trans = tex_t * tex_s;
 
   return texture_trans;
-}
-
-static inline int max(int a, int b)
-{
-  if (a > b)
-    return a;
-  else
-    return b;
 }
 
 void render_text(struct mesh plane_mesh,

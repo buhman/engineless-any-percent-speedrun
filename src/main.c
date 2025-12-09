@@ -234,7 +234,7 @@ int main()
   const double frame_rate = 60.0;
   const double first_frame = glfwGetTime();
   double last_frame = first_frame;
-  double frames = 1;
+  //double frames = 1;
   const char * last_gamepad_name = NULL;
 
   struct game_state state = {0};
@@ -404,8 +404,7 @@ int main()
       glfwWaitEventsTimeout(delta);
     }
     //printf("fps %f\n", frames / (glfwGetTime() - first_frame));
-
-    frames += 1;
+    //frames += 1;
   }
 
   glfwTerminate();
