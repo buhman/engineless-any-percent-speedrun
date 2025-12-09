@@ -59,7 +59,7 @@ endif
 
 else ifeq ($(shell uname),Darwin)
 
-OBJARCH += -O mach-o-x86-64 -B i386:x86-64
+OBJARCH += -O mach-o-x86-64
 
 else # assume Windows
 
