@@ -215,7 +215,7 @@ void update_advance_level(struct game_state * state)
     block_count += 1;
   }
 
-  if (block_count < 10) {
+  if (block_count == 0) {
     state->level_ix = (state->level_ix + 1) % levels_length;
     printf("next level %d\n", state->level_ix);
     reset_level(state);
