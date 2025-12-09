@@ -7,8 +7,8 @@ MAKEFILE_PATH := $(patsubst %/,%,$(dir $(abspath $(firstword $(MAKEFILE_LIST))))
 
 DEBUG = -g
 
-CSTD += -std=gnu23
-CXXSTD += -std=gnu++23
+CSTD += -std=gnu11
+CXXSTD += -std=gnu++14
 
 CFLAGS += -Wall -Werror -Wfatal-errors
 CFLAGS += -Wno-error=unused-function
