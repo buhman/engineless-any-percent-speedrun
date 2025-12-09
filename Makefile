@@ -38,8 +38,10 @@ endif
 
 OBJCOPY ?= objcopy
 
+ifneq ($(shell uname),Darwin)
 ifndef GLFW
 $(error GLFW undefined)
+endif
 endif
 
 ifdef I386
