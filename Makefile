@@ -44,7 +44,11 @@ else
 OBJARCH = -O elf64-x86-64 -B i386:x86-64
 endif
 
-else
+else ifeq ($(shell uname),Darwin)
+
+OBJARCH += -O mach-o-x86-64 -B i386:x86-64
+
+else # assume Windows
 
 ifdef I386
 OBJARCH += -O pe-i386 -B i386
