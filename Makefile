@@ -25,6 +25,8 @@ ifeq ($(OS),Windows_NT)
 LDFLAGS += -Wl,--subsystem,windows -mwindows
 endif
 
+OBJCOPY ?= objcopy
+
 ifndef GLFW
 $(error GLFW undefined)
 endif
@@ -59,7 +61,7 @@ OPT = -Og
 all: main
 
 define BUILD_BINARY_O
-	objcopy \
+	$(OBJCOPY) \
 		-I binary $(OBJARCH) \
 		--rename-section .data=.data.$(basename $@) \
 		$< $@
