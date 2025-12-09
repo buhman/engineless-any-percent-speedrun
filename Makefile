@@ -20,7 +20,10 @@ CFLAGS += -I$(dir $(GLFW))../include
 CXXFLAGS += -fno-exceptions
 #CFLAGS += -DDEBUG_BUTTONS
 #CFLAGS += -DDEBUG_AXES
-LDFLAGS += -nostdlib++ -lm -static-libgcc
+LDFLAGS += -nostdlib++ -lm
+ifeq ($(shell uname),Linux)
+LDFLAGS += -static-libgcc
+endif
 ifeq ($(OS),Windows_NT)
 LDFLAGS += -Wl,--subsystem,windows -mwindows
 endif
