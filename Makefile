@@ -16,7 +16,11 @@ CFLAGS += -Wno-error=unused-const-variable
 CFLAGS += -Wno-error=unused-but-set-variable
 CFLAGS += -Wno-error=unused-variable
 CFLAGS += -I$(MAKEFILE_PATH)/include
+ifeq ($(shell uname),Darwin)
+CFLAGS += $(shell pkg-config --cflags glfw3)
+else
 CFLAGS += -I$(dir $(GLFW))../include
+endif
 CXXFLAGS += -fno-exceptions
 #CFLAGS += -DDEBUG_BUTTONS
 #CFLAGS += -DDEBUG_AXES
@@ -27,6 +31,10 @@ endif
 ifeq ($(OS),Windows_NT)
 LDFLAGS += -Wl,--subsystem,windows -mwindows
 endif
+ifeq ($(shell uname),Darwin)
+LDFLAGS += $(shell pkg-config --libs glfw3)
+endif
+
 
 OBJCOPY ?= objcopy
 
