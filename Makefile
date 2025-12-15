@@ -39,6 +39,7 @@ endif
 
 ifdef I386
 ARCH='-m32'
+AFLAGS='--32'
 endif
 
 ifeq ($(shell uname),Linux)
@@ -129,7 +130,7 @@ clean:
 	rm -f main
 
 %.o: %.s
-	$(AS) $< -o $@ $(TARGET)
+	$(AS) $(AFLAGS) $< -o $@ $(TARGET)
 
 %.o: %.cpp
 	$(CXX) $(CXXSTD) $(ARCH) $(CFLAGS) $(OPT) $(DEBUG) $(DEPFLAGS) -MF ${<}.d -c $< -o $@ $(TARGET)
