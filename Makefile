@@ -13,14 +13,10 @@ CXXSTD += -std=gnu++14
 CFLAGS += -Wall -Werror -Wfatal-errors
 CFLAGS += -Wno-error=unused-function
 CFLAGS += -Wno-error=unused-const-variable
-CFLAGS += -Wno-error=unused-but-set-variable
+#CFLAGS += -Wno-error=unused-but-set-variable
 CFLAGS += -Wno-error=unused-variable
 CFLAGS += -I$(MAKEFILE_PATH)/include
-ifeq ($(shell uname),Darwin)
-CFLAGS += $(shell pkg-config --cflags glfw3)
-else
 CFLAGS += -I$(dir $(GLFW))../include
-endif
 CXXFLAGS += -fno-exceptions
 #CFLAGS += -DDEBUG_BUTTONS
 #CFLAGS += -DDEBUG_AXES
@@ -32,16 +28,13 @@ ifeq ($(OS),Windows_NT)
 LDFLAGS += -Wl,--subsystem,windows -mwindows
 endif
 ifeq ($(shell uname),Darwin)
-LDFLAGS += $(shell pkg-config --libs glfw3)
+LDFLAGS += -framework Foundation -framework IOKit -framework AppKit
 endif
-
 
 OBJCOPY ?= objcopy
 
-ifneq ($(shell uname),Darwin)
 ifndef GLFW
 $(error GLFW undefined)
-endif
 endif
 
 ifdef I386
@@ -77,20 +70,22 @@ OPT = -Og
 
 all: main
 
-define BUILD_BINARY_O
-	$(OBJCOPY) \
-		-I binary $(OBJARCH) \
-		--rename-section .data=.data.$(basename $@) \
-		$< $@
-endef
-
+#makefile_relative = $(shell realpath --relative-to $(makefile_path) $(1))
 makefile_path := $(dir $(abspath $(firstword $(MAKEFILE_LIST))))
-makefile_relative = $(shell realpath --relative-to $(makefile_path) $(1))
-as_obj_binary = $(subst -,_,$(subst .,_,$(subst /,_,$(subst .h,,$(call makefile_relative,$(1))))))
+as_obj_binary = $(subst -,_,$(subst .,_,$(subst /,_,$(subst .h,,$(1)))))
 as_obj_binary_p = _binary_$(call as_obj_binary,$(1))
 
+define BUILD_BINARY_S
+	@echo build_binary_h $@
+	@echo '.global $(call as_obj_binary_p,$<)_start' > $@
+	@echo '.global $(call as_obj_binary_p,$<)_end' >> $@
+	@echo '$(call as_obj_binary_p,$<)_start:' >> $@
+	@printf '\t.incbin "$<"\n' >> $@
+	@echo '$(call as_obj_binary_p,$<)_end:' >> $@
+endef
+
 define BUILD_BINARY_H
-	@echo gen $(call makefile_relative,$@)
+	@echo build_binary_h $@
 	@echo '#pragma once' > $@
 	@echo '' >> $@
 	@echo '#include <stdint.h>' >> $@
@@ -101,7 +96,6 @@ define BUILD_BINARY_H
 	@echo '' >> $@
 	@echo 'extern uint32_t $(call as_obj_binary_p,$<)_start __asm("$(call as_obj_binary_p,$<)_start");' >> $@
 	@echo 'extern uint32_t $(call as_obj_binary_p,$<)_end __asm("$(call as_obj_binary_p,$<)_end");' >> $@
-	@echo 'extern uint32_t $(call as_obj_binary_p,$<)_size __asm("$(call as_obj_binary_p,$<)_size");' >> $@
 	@echo '' >> $@
 	@echo '#define $(call as_obj_binary,$<)_start ((const char *)&$(call as_obj_binary_p,$<)_start)' >> $@
 	@echo '#define $(call as_obj_binary,$<)_end ((const char *)&$(call as_obj_binary_p,$<)_end)' >> $@
@@ -112,20 +106,20 @@ define BUILD_BINARY_H
 	@echo '#endif' >> $@
 endef
 
-%.glsl.o: %.glsl
-	$(BUILD_BINARY_O)
+%.glsl.s: %.glsl
+	$(BUILD_BINARY_S)
+
+%.data.s: %.data
+	$(BUILD_BINARY_S)
+
+%.data.pal.s: %.data.pal
+	$(BUILD_BINARY_S)
 
 include/%.glsl.h: src/%.glsl
 	$(BUILD_BINARY_H)
 
-%.data.o: %.data
-	$(BUILD_BINARY_O)
-
 include/%.data.h: src/%.data
 	$(BUILD_BINARY_H)
-
-%.data.pal.o: %.data.pal
-	$(BUILD_BINARY_O)
 
 include/%.data.pal.h: src/%.data.pal
 	$(BUILD_BINARY_H)
@@ -134,11 +128,14 @@ clean:
 	rm -f *.o *.d *.gch
 	rm -f main
 
+%.o: %.s
+	$(AS) $< -o $@ $(TARGET)
+
 %.o: %.cpp
-	$(CXX) $(CXXSTD) $(ARCH) $(CFLAGS) $(OPT) $(DEBUG) $(DEPFLAGS) -MF ${<}.d -c $< -o $@
+	$(CXX) $(CXXSTD) $(ARCH) $(CFLAGS) $(OPT) $(DEBUG) $(DEPFLAGS) -MF ${<}.d -c $< -o $@ $(TARGET)
 
 %.o: %.c
-	$(CC) $(CSTD) $(ARCH) $(CFLAGS) $(CXXFLAGS) $(OPT) $(DEBUG) $(DEPFLAGS) -MF ${<}.d -c $< -o $@
+	$(CC) $(CSTD) $(ARCH) $(CFLAGS) $(CXXFLAGS) $(OPT) $(DEBUG) $(DEPFLAGS) -MF ${<}.d -c $< -o $@ $(TARGET)
 
 MAIN_OBJS = \
 	src/main.o \
@@ -156,7 +153,7 @@ MAIN_OBJS = \
 	$(GLFW)
 
 main: $(MAIN_OBJS)
-	$(CXX) $^ $(CXXFLAGS) $(ARCH) -o $@ $(LDFLAGS)
+	$(CXX) $^ $(CXXFLAGS) $(ARCH) -o $@ $(LDFLAGS) $(TARGET)
 
 #-include $(shell find -type f -name 'src/*.d')
 
