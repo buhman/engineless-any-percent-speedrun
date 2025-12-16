@@ -213,7 +213,7 @@ int main()
 
   glActiveTexture(GL_TEXTURE0);
   uint terminus_font = make_texture(src_font_ter_u32n_data_start,
-                                    GL_RED,
+                                    GL_RGB,
                                     256,
                                     256,
                                     GL_RED);

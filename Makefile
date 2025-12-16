@@ -12,20 +12,24 @@ CXXSTD += -std=gnu++14
 
 CFLAGS += -Wall -Werror -Wfatal-errors
 CFLAGS += -Wno-error=unused-function
-CFLAGS += -Wno-error=unused-const-variable
+#CFLAGS += -Wno-error=unused-const-variable
 #CFLAGS += -Wno-error=unused-but-set-variable
 CFLAGS += -Wno-error=unused-variable
+CFLAGS += -Wno-error=narrowing
 CFLAGS += -I$(MAKEFILE_PATH)/include
 CFLAGS += -I$(dir $(GLFW))../include
 CXXFLAGS += -fno-exceptions
 #CFLAGS += -DDEBUG_BUTTONS
 #CFLAGS += -DDEBUG_AXES
-LDFLAGS += -nostdlib++ -lm
-ifeq ($(shell uname),Linux)
+LDFLAGS += -lm
+ifneq ($(shell uname),Darwin)
 LDFLAGS += -static-libgcc
 endif
+ifeq ($(shell uname),Linux)
+LDFLAGS += -nostdlib++
+endif
 ifeq ($(OS),Windows_NT)
-LDFLAGS += -Wl,--subsystem,windows -mwindows
+LDFLAGS += -Wl,--subsystem,windows -mwindows #-mconsole
 endif
 ifeq ($(shell uname),Darwin)
 LDFLAGS += -framework Foundation -framework IOKit -framework AppKit
